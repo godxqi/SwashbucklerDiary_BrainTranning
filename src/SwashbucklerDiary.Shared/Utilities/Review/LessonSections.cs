@@ -13,16 +13,17 @@ namespace SwashbucklerDiary.Shared
     /// <remarks>
     /// 各节的思想来源（只是解释框架，不是原典逐字引用）：
     /// <list type="bullet">
-    /// <item>4.4 我的反应四层（身体 / 想法 / 情绪 / 意义感）：项目方法文档
+    /// <item>4.3 我的反应四层（身体 / 想法 / 情绪 / 意义感）：项目方法文档
     /// （Tara Swart《大脑训练手册》）；身体层与躯体心理学
     /// （van der Kolk《身体从未忘记》, 2014）同源。</item>
-    /// <item>4.5 照见：荣格的「投射 / 阴影」；库利的「镜中我」(1902)；
+    /// <item>4.4 照见：荣格的「投射 / 阴影」；库利的「镜中我」(1902)；
     /// 「外面没有别人」是张德芬与《零极限》的通俗化说法，不是荣格原话。</item>
-    /// <item>4.6 边界：阿德勒「课题分离」；Cloud 与 Townsend《Boundaries》(1992)。</item>
-    /// <item>4.7 带走一句：项目方法文档 4 的自我肯定库；
+    /// <item>4.5 边界：阿德勒「课题分离」；Cloud 与 Townsend《Boundaries》(1992)。</item>
+    /// <item>4.6 带走一句：项目方法文档 4 的自我肯定库；
     /// 自我肯定理论（Steele, 1988）与 CBT 的认知重构是邻近机制。</item>
-    /// <item>4.8 下一步：行为激活（CBT）；Gollwitzer 的「执行意图」(1999)；
+    /// <item>4.7 下一步：行为激活（CBT）；Gollwitzer 的「执行意图」(1999)；
     /// SMART 目标（Doran, 1981）。</item>
+    /// <item>4.8 课题类型：作为整篇的总结放在最后，回答「这段相处让我完成了什么课题」。</item>
     /// </list>
     /// </remarks>
     public sealed record LessonSections
@@ -36,26 +37,26 @@ namespace SwashbucklerDiary.Shared
         /// <summary>4.1 人物。和人物标签重复，但导出后仍能读到。</summary>
         public string Person { get; set; } = string.Empty;
 
-        /// <summary>4.2 课题类型。选中项用「、」连起来。</summary>
-        public string LessonTypes { get; set; } = string.Empty;
-
-        /// <summary>4.3 事件。</summary>
+        /// <summary>4.2 事件。</summary>
         public string Event { get; set; } = string.Empty;
 
-        /// <summary>4.4 我的反应，顺序是身体 / 想法 / 情绪 / 意义感。</summary>
+        /// <summary>4.3 我的反应，顺序是身体 / 想法 / 情绪 / 意义感。</summary>
         public string[] Reactions { get; set; } = ["", "", "", ""];
 
-        /// <summary>4.5 照见。</summary>
+        /// <summary>4.4 照见。</summary>
         public string Mirror { get; set; } = string.Empty;
 
-        /// <summary>4.6 边界。</summary>
+        /// <summary>4.5 边界。</summary>
         public string Boundary { get; set; } = string.Empty;
 
-        /// <summary>4.7 带走一句。</summary>
+        /// <summary>4.6 带走一句。</summary>
         public string Takeaway { get; set; } = string.Empty;
 
-        /// <summary>4.8 下一步。</summary>
+        /// <summary>4.7 下一步。</summary>
         public string NextStep { get; set; } = string.Empty;
+
+        /// <summary>4.8 课题类型（总结）。选中项用「、」连起来。</summary>
+        public string LessonTypes { get; set; } = string.Empty;
 
         public bool IsEmpty
             => string.IsNullOrWhiteSpace(Person)
@@ -74,13 +75,13 @@ namespace SwashbucklerDiary.Shared
             return new LessonSections
             {
                 Person = bodies[0],
-                LessonTypes = bodies[1],
-                Event = bodies[2],
-                Reactions = ReviewSections.ParseItems(bodies[3], ReactionCount),
-                Mirror = bodies[4],
-                Boundary = bodies[5],
-                Takeaway = bodies[6],
-                NextStep = bodies[7],
+                Event = bodies[1],
+                Reactions = ReviewSections.ParseItems(bodies[2], ReactionCount),
+                Mirror = bodies[3],
+                Boundary = bodies[4],
+                Takeaway = bodies[5],
+                NextStep = bodies[6],
+                LessonTypes = bodies[7],
             };
         }
 
@@ -93,13 +94,13 @@ namespace SwashbucklerDiary.Shared
             var builder = new StringBuilder();
 
             AppendParagraph(builder, 1, titles.ElementAtOrDefault(0), Person);
-            AppendParagraph(builder, 2, titles.ElementAtOrDefault(1), LessonTypes);
-            AppendParagraph(builder, 3, titles.ElementAtOrDefault(2), Event);
-            AppendItems(builder, 4, titles.ElementAtOrDefault(3), Reactions, reactionLabels);
-            AppendParagraph(builder, 5, titles.ElementAtOrDefault(4), Mirror);
-            AppendParagraph(builder, 6, titles.ElementAtOrDefault(5), Boundary);
-            AppendParagraph(builder, 7, titles.ElementAtOrDefault(6), Takeaway);
-            AppendParagraph(builder, 8, titles.ElementAtOrDefault(7), NextStep);
+            AppendParagraph(builder, 2, titles.ElementAtOrDefault(1), Event);
+            AppendItems(builder, 3, titles.ElementAtOrDefault(2), Reactions, reactionLabels);
+            AppendParagraph(builder, 4, titles.ElementAtOrDefault(3), Mirror);
+            AppendParagraph(builder, 5, titles.ElementAtOrDefault(4), Boundary);
+            AppendParagraph(builder, 6, titles.ElementAtOrDefault(5), Takeaway);
+            AppendParagraph(builder, 7, titles.ElementAtOrDefault(6), NextStep);
+            AppendParagraph(builder, 8, titles.ElementAtOrDefault(7), LessonTypes);
 
             return builder.ToString();
         }

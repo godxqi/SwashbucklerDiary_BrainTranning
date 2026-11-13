@@ -17,7 +17,8 @@ namespace SwashbucklerDiary.Rcl.Pages
     /// 经岸见一郎《被讨厌的勇气》通俗化；「每个人都是来给你上课的」是新时代与佛教缘起的
     /// 流行说法（Caroline Myss《神圣契约》, 2001；Brian Weiss《前世今生》, 1988），
     /// 属于意义框架，不是心理学证据。本页只把它当自省工具：
-    /// 写清谁的课题、我照见了什么、下一步做什么。
+    /// 记录在某个人的某件事上学到了什么、有什么感悟；课题类型放在最后，
+    /// 作为「这段相遇让我完成了什么课题」的总结，而不是入场标签。
     /// </remarks>
     public partial class LessonEditPage : ImportantComponentBase
     {
@@ -27,17 +28,17 @@ namespace SwashbucklerDiary.Rcl.Pages
         /// </summary>
         private static readonly LessonType[] lessonTypes = Enum.GetValues<LessonType>();
 
-        /// <summary>正文 4.1 ~ 4.8 的章节标题。</summary>
+        /// <summary>正文 4.1 ~ 4.8 的章节标题，顺序与表单一致：类型作为总结放在最后。</summary>
         private static readonly string[] sectionTitleKeys =
         [
             "Person",
-            "Lesson type",
             "What happened",
             "My reaction",
             "What it mirrors",
             "Boundary",
             "One line to keep",
             "Next step",
+            "Lesson type",
         ];
 
         /// <summary>四层反应的题干，顺序与 <see cref="LessonSections.Reactions"/> 一致。</summary>
@@ -515,7 +516,7 @@ namespace SwashbucklerDiary.Rcl.Pages
             "Who this is about. Pick someone, or add a new person.";
 
         public const string TypeDescription =
-            "Pick the kind of lesson this is. More than one is fine.";
+            "Write the experience first, then come back: which kind of lesson did this relationship move forward? Pick as many as apply.";
 
         public const string EventDescription =
             "What actually happened - observable behavior and exact words, not judgments.";

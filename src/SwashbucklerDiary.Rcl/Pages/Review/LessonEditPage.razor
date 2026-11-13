@@ -6,7 +6,8 @@
   「课题」借自阿德勒的「人生课题」（工作/交友/爱）与「课题分离」，经岸见一郎
   《被讨厌的勇气》通俗化；「每个人都是来给你上课的」是新时代/佛教缘起的流行说法
   （Caroline Myss《神圣契约》, 2001；Brian Weiss《前世今生》, 1988），属于意义框架，
-  不是实证心理学。这个页面只把它当自省工具：写清谁的课题、我照见了什么、下一步做什么。*@
+  不是实证心理学。这个页面只把它当自省工具：记录在某个人的某件事上学到了什么、有什么感悟，
+  最后再回头归类「这段相处让我完成了什么课题」——类型是结论，不是入场标签。*@
 
 <div class="d-flex flex-column" style="height:100%;">
     <MyAppBar Title="@(I18n.T("Lesson record"))"
@@ -49,38 +50,6 @@
                         @(I18n.T("Add"))
                     </MChip>
                 </MChipGroup>
-            </div>
-
-            @*课题类型的出处逐条写在 LessonType 的 XML 注释里：
-              边界=阿德勒/Cloud；被评价=阿德勒/库利/萨特；信任=依恋/埃里克森；
-              表达=卢森堡/罗杰斯；冲突=Thomas-Kilmann/费希尔；依赖=依恋/霍妮；
-              亲密=埃里克森/EFT/布琳·布朗；权威=阿德勒/伯恩/米尔格拉姆/米勒。*@
-            <div class="review-section">
-                <div class="review-label">@(I18n.T("Lesson type"))</div>
-                <div class="review-desc">@(I18n.T(LessonText.TypeDescription))</div>
-                <MChipGroup Class="review-chip-group"
-                            Multiple="true">
-                    @foreach (var type in lessonTypes)
-                    {
-                        <MChip @key="type"
-                               Class="@ChipClass(selectedTypes.Contains(type))"
-                               Filter="true"
-                               IsActive="selectedTypes.Contains(type)"
-                               OnClick="@(() => ToggleType(type))">
-                            <MIcon Left="true">@GlobalConfiguration.GetLessonTypeIcon(type)</MIcon>
-                            @(I18n.T(type.ToString()))
-                        </MChip>
-                    }
-                </MChipGroup>
-                @*点了哪个类型，就在下面给出它的简介——和日课 1.6 点情绪芯片同一个手感。*@
-                @foreach (var type in lessonTypes.Where(it => selectedTypes.Contains(it)))
-                {
-                    <div class="review-picked">
-                        <span class="font-weight-bold">@(I18n.T(type.ToString()))</span>
-                        — @(I18n.T($"{type} description"))
-                        <div class="review-type-source">@(I18n.T($"{type} source"))</div>
-                    </div>
-                }
             </div>
 
             @*事件只写可观察的行为和原话，不写评判——这条来自非暴力沟通的「观察 vs. 评价」
@@ -180,6 +149,39 @@
                            Class="review-textarea"
                            Rows="2">
                 </MTextarea>
+            </div>
+
+            @*总结放最后：先把经历、感受和收获写完，再回头归类这段相处完成了什么课题。
+              类型的出处逐条写在 LessonType 的 XML 注释里：
+              边界=阿德勒/Cloud；被评价=阿德勒/库利/萨特；信任=依恋/埃里克森；
+              表达=卢森堡/罗杰斯；冲突=Thomas-Kilmann/费希尔；依赖=依恋/霍妮；
+              亲密=埃里克森/EFT/布琳·布朗；权威=阿德勒/伯恩/米尔格拉姆/米勒。*@
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("Lesson type"))</div>
+                <div class="review-desc">@(I18n.T(LessonText.TypeDescription))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var type in lessonTypes)
+                    {
+                        <MChip @key="type"
+                               Class="@ChipClass(selectedTypes.Contains(type))"
+                               Filter="true"
+                               IsActive="selectedTypes.Contains(type)"
+                               OnClick="@(() => ToggleType(type))">
+                            <MIcon Left="true">@GlobalConfiguration.GetLessonTypeIcon(type)</MIcon>
+                            @(I18n.T(type.ToString()))
+                        </MChip>
+                    }
+                </MChipGroup>
+                @*点了哪个类型，就在下面给出它的简介——和日课 1.6 点情绪芯片同一个手感。*@
+                @foreach (var type in lessonTypes.Where(it => selectedTypes.Contains(it)))
+                {
+                    <div class="review-picked">
+                        <span class="font-weight-bold">@(I18n.T(type.ToString()))</span>
+                        — @(I18n.T($"{type} description"))
+                        <div class="review-type-source">@(I18n.T($"{type} source"))</div>
+                    </div>
+                }
             </div>
         </div>
     </ScrollContainer>

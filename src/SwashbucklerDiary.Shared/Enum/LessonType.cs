@@ -5,7 +5,7 @@ namespace SwashbucklerDiary.Shared
     /// 不是诊断，也不要求一次只选一个——一次课题同时踩中「边界 + 被评价」是常态。
     /// <para>
     /// 从 1 开始、0 视为未选择，与 <see cref="MoodKind"/> 同一个约定。
-    /// 落点是课题正文 4.2 的类型文字；类型本身不单独建表，所以加一个值只需要改这里、
+    /// 落点是课题正文 4.8 的类型文字；类型本身不单独建表，所以加一个值只需要改这里、
     /// <c>lesson-type-icons.json</c> 和 i18n 的 key（key 就是枚举名）。
     /// </para>
     /// </summary>
