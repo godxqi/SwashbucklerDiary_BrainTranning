@@ -1,0 +1,137 @@
+@page "/library"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits DiariesPageComponentBase
+
+<MyAppBar>
+    <MyTabs @bind-Value="tab"
+            Items="tabListItems">
+    </MyTabs>
+
+    <MSpacer></MSpacer>
+
+    <MultiSizeSearch OnSearch="Search"></MultiSizeSearch>
+</MyAppBar>
+
+<SwiperTabItems @ref="swiperTabItems"
+                @bind-Value="tab">
+    <SwiperTabItem>
+        <MContainer Class="my-container"
+                    Fluid="true">
+            @*库表 tab 的总入口。自由日记退出主导航后，日历与文件浏览降级到这里，
+              免得它们在换导航时彻底失去入口；复盘的四组库 / 表也都在这里。*@
+            <div class="d-flex flex-wrap mb-2 px-2">
+                <MButton Class="flex-grow-1 me-2 mb-2"
+                         OnClick="@(() => To("history"))">
+                    <MIcon Left="true">schedule</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Calendar"))</wc-auto-scroll-text>
+                </MButton>
+                <MButton Class="flex-grow-1 mb-2"
+                         OnClick="@(() => To("fileBrowse"))">
+                    <MIcon Left="true">draft</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("File"))</wc-auto-scroll-text>
+                </MButton>
+                <MButton Class="flex-grow-1 me-2 mb-2"
+                         OnClick="@(() => To("triggers"))">
+                    <MIcon Left="true">bolt</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Trigger"))</wc-auto-scroll-text>
+                </MButton>
+                <MButton Class="flex-grow-1 mb-2"
+                         OnClick="@(() => To("macroGoals"))">
+                    <MIcon Left="true">flag</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Macro goal"))</wc-auto-scroll-text>
+                </MButton>
+                <MButton Class="flex-grow-1 me-2 mb-2"
+                         OnClick="@(() => To("archive"))">
+                    <MIcon Left="true">inventory_2</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Archive"))</wc-auto-scroll-text>
+                </MButton>
+                <MButton Class="flex-grow-1 mb-2"
+                         OnClick="@(() => To("affirmations"))">
+                    <MIcon Left="true">format_quote</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Affirmation library"))</wc-auto-scroll-text>
+                </MButton>
+                @*文档 6 的三个优点表：它们在 5.1「现在要调用哪一条」里是被分开翻的三栏，
+                  所以这里也各给一个入口，而不是合成一个*@
+                <MButton Class="flex-grow-1 me-2 mb-2"
+                         OnClick="@(() => To("virtue?kind=0"))">
+                    <MIcon Left="true">favorite</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Positive list"))</wc-auto-scroll-text>
+                </MButton>
+                <MButton Class="flex-grow-1 mb-2"
+                         OnClick="@(() => To("virtue?kind=1"))">
+                    <MIcon Left="true">volunteer_activism</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Gratitude list"))</wc-auto-scroll-text>
+                </MButton>
+                <MButton Class="flex-grow-1 me-2 mb-2"
+                         OnClick="@(() => To("virtue?kind=2"))">
+                    <MIcon Left="true">emoji_events</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("Achievement list"))</wc-auto-scroll-text>
+                </MButton>
+                @*文档 5 的状态管理表。它跟上面三个优点表是一对：
+                  那三张表就是为「现在要调用哪一条」这一刻建的*@
+                <MButton Class="flex-grow-1 mb-2"
+                         OnClick="@(() => To("stateRecords"))">
+                    <MIcon Left="true">psychology</MIcon>
+                    <wc-auto-scroll-text>@(I18n.T("State record"))</wc-auto-scroll-text>
+                </MButton>
+            </div>
+            <HomeHead ShowDate="showDate"
+                      ShowWelcomeText="showWelcomeText">
+            </HomeHead>
+            <DiaryCardList @bind-Value="Diaries"
+                           @bind-Tags="Tags">
+            </DiaryCardList>
+        </MContainer>
+
+    </SwiperTabItem>
+    <SwiperTabItem>
+        <MContainer Class="my-container"
+                    Fluid="true">
+            <TagCardList @bind-Value="Tags"
+                         Diaries="Diaries">
+            </TagCardList>
+        </MContainer>
+    </SwiperTabItem>
+    <SwiperTabItem>
+        <MContainer Class="my-container"
+                    Fluid="true">
+            <DiaryCardList @bind-Value="templates"
+                           @bind-Tags="Tags"
+                           HideStatisticsCard
+                           Template
+                           NotFoundText="@I18n.T("No templates")">
+            </DiaryCardList>
+        </MContainer>
+    </SwiperTabItem>
+</SwiperTabItems>
+
+<div class="right-bottom-float-area">
+    <BackTopButton Selector="@SwiperActiveItemSelector">
+    </BackTopButton>
+    <MWindow Value="tab" Style="overflow:unset;" Touchless>
+        <MWindowItem Transition=""
+                     ReverseTransition="">
+            <MyFloatButton Icon="mdi:mdi-pencil"
+                           OnClick="@(()=>To("write"))">
+            </MyFloatButton>
+        </MWindowItem>
+        <MWindowItem Transition=""
+                     ReverseTransition="">
+            <MyFloatButton Icon="add"
+                           OnClick="()=>showAddTag=true">
+            </MyFloatButton>
+        </MWindowItem>
+        <MWindowItem Transition=""
+                     ReverseTransition="">
+            <MyFloatButton Icon="mdi:mdi-pencil"
+                           OnClick="@(() => To("write?Template=true"))">
+            </MyFloatButton>
+        </MWindowItem>
+    </MWindow>
+</div>
+
+<InputDialog @bind-Visible="showAddTag"
+             Title="@(I18n.T("Add tags"))"
+             Placeholder="@(I18n.T("Please enter a tag name"))"
+             OnOK="SaveAddTag">
+</InputDialog>

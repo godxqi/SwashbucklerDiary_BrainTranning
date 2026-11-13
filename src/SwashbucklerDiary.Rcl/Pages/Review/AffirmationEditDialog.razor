@@ -1,0 +1,53 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits DialogComponentBase
+
+<CustomMDialog MyValue="Visible"
+               MyValueChanged="InternalVisibleChanged"
+               ContentClass="rounded-lg"
+               MaxWidth="480"
+               DisableAutoFocus
+               OnBeforeShowContent="HandleOnBeforeShowContent">
+    <MCard>
+        <MCardTitle Class="font-weight-bold flex-nowrap">
+            <wc-auto-scroll-text>@(I18n.T("Affirmation"))</wc-auto-scroll-text>
+            <MSpacer></MSpacer>
+            <MButton Icon
+                     OnClick="HandleOnCancel">
+                <MIcon>close</MIcon>
+            </MButton>
+        </MCardTitle>
+        <MCardText Class="pb-0">
+            <div class="review-label">@(I18n.T("Phrase"))</div>
+            <MTextarea @bind-Value="affirmation.Content"
+                       Class="review-textarea"
+                       Rows="2">
+            </MTextarea>
+
+            @*文档 4.2 那张表的「来自哪」——书里示范的灵感来源是书籍 / 电影 / 交谈 / 自己的感悟*@
+            <div class="review-label">@(I18n.T("Where it came from"))</div>
+            <div class="review-desc">@(I18n.T("A book, a film, a conversation, something you realised on your own. Optional."))</div>
+            <MTextarea @bind-Value="affirmation.Source"
+                       Class="review-textarea"
+                       Rows="2">
+            </MTextarea>
+
+            @*停用只是把它从复盘主页顶部条上撤下来，不删除——历史和「用了几次」都还在*@
+            <MSwitch @bind-Value="affirmation.IsActive"
+                     Class="mt-2"
+                     Label="@(I18n.T("Active (shows on today's affirmation bar)"))">
+            </MSwitch>
+        </MCardText>
+        <MCardActions Class="pt-0">
+            <MSpacer></MSpacer>
+            <MButton Text
+                     OnClick="HandleOnCancel">
+                @(I18n.T("Cancel"))
+            </MButton>
+            <MButton Text
+                     Color="primary"
+                     OnClick="HandleOnOK">
+                @(I18n.T("Save"))
+            </MButton>
+        </MCardActions>
+    </MCard>
+</CustomMDialog>

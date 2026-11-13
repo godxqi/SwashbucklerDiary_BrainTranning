@@ -1,0 +1,133 @@
+@page "/archive"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@(I18n.T("Archive"))"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            @*文档 7 开头：四个 List 不是待办，是归档区——周课 2.4 的出口问题与各来源的自动归档往这里写*@
+            <div class="review-desc">@(I18n.T("The four lists are not a to-do list. They are an archive, and only the fourth exit question in 2.4 writes into them."))</div>
+
+            <MChipGroup Class="review-chip-group"
+                        Multiple="true">
+                @foreach (var item in kinds)
+                {
+                    <MChip @key="item"
+                           Class="@ChipClass(kind == item)"
+                           Filter="true"
+                           IsActive="kind == item"
+                           OnClick="@(() => SwitchKindAsync(item))">
+                        @KindName(item)
+                    </MChip>
+                }
+            </MChipGroup>
+
+            <div class="review-desc">@KindDescription</div>
+
+            @*7.4 的出口：同一条累计 3 次，说明它不是偶发*@
+            @if (kind == ArchiveKind.MicroFailure && feedbackCandidates.Count > 0)
+            {
+                <div class="review-subitem-label">@($"{I18n.T("Ready to feed back")} · {feedbackCandidates.Count}")</div>
+
+                @foreach (var item in feedbackCandidates)
+                {
+                    <div @key="item.Id"
+                         class="review-group">
+                        <div class="review-group-head">
+                            <span class="review-group-index">@($"{item.Content} ×{item.OccurrenceCount}")</span>
+                        </div>
+                        <div class="review-desc">@(I18n.T("It keeps coming back. Send it into this week's 2.2 as a fresh undecided failure."))</div>
+                        <MButton Class="review-add"
+                                 OnClick="@(() => AskFeedback(item))">
+                            <MIcon Left="true">replay</MIcon>
+                            @(I18n.T("Feed back into this week's 2.2"))
+                        </MButton>
+                    </div>
+                }
+            }
+
+            @*7.2 的自动入口：跨周还没做的周目标*@
+            @if (kind == ArchiveKind.FuturePlan && carriedOverGoals.Count > 0)
+            {
+                <div class="review-subitem-label">@($"{I18n.T("Goals that carried over")} · {carriedOverGoals.Count}")</div>
+
+                @foreach (var goal in carriedOverGoals)
+                {
+                    <div @key="goal.Id"
+                         class="review-group">
+                        <div class="review-group-head">
+                            <span class="review-group-index">@goal.Content</span>
+                        </div>
+                        <div class="review-desc">@(I18n.T("Set in an earlier week and never finished. File it here as a plan for the future."))</div>
+                        <MButton Class="review-add"
+                                 OnClick="@(() => ArchiveGoalAsync(goal))">
+                            <MIcon Left="true">inventory_2</MIcon>
+                            @(I18n.T("File it here"))
+                        </MButton>
+                    </div>
+                }
+            }
+
+            @if (items.Count == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("Nothing archived here yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var item in items)
+                    {
+                        <MListItem @key="item.Id"
+                                   Class="px-0">
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@item.Content</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                <MListItemSubtitle>
+                                    <wc-auto-scroll-text>@SourceName(item.Source)@(item.OccurrenceCount > 1 ? $" · ×{item.OccurrenceCount}" : "")@(item.FedBackToWeekOfYear is int week ? $" · {I18n.T("Fed back")} {item.FedBackYear}-W{week:00}" : "")</wc-auto-scroll-text>
+                                </MListItemSubtitle>
+                            </MListItemContent>
+                            <MListItemAction>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => AskDelete(item))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            </MListItemAction>
+                        </MListItem>
+                    }
+                </MList>
+            }
+
+            <MButton Class="review-add"
+                     OnClick="@(() => showAdd = true)">
+                <MIcon Left="true">add</MIcon>
+                @(I18n.T("Add by hand"))
+            </MButton>
+        </div>
+    </ScrollContainer>
+</div>
+
+<InputDialog @bind-Visible="showAdd"
+             Title="@KindName(kind)"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MaxLength="200"
+             OnOK="AddAsync">
+</InputDialog>
+
+<DeleteDialog @bind-Visible="showDelete"
+              Title="@(I18n.T("Delete"))"
+              OnOK="ConfirmDeleteAsync">
+</DeleteDialog>
+
+<DeleteDialog @bind-Visible="showFeedback"
+              Title="@(I18n.T("Feed back into this week's 2.2"))"
+              Content="@(I18n.T("It will be marked as fed back and a fresh undecided failure will be created in this week's 2.2."))"
+              OnOK="ConfirmFeedbackAsync">
+</DeleteDialog>

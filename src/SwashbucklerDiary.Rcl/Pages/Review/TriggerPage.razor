@@ -1,0 +1,80 @@
+@page "/triggers"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@(I18n.T("Trigger"))"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            @*文档 5.2：触发诱因不是随机的，它是「相似感」的指纹。攒够几个，它们迟早指向同一个限制性观念。*@
+            <div class="review-desc">
+                @(I18n.T("A trigger is not random: it is the fingerprint of a similarity. Log a few and they will point at the same limiting belief. Once one reaches three, take it to the monthly review."))
+            </div>
+
+            @if (triggers.Count == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("No trigger yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var item in triggers)
+                    {
+                        <MListItem @key="item.Tag.Id"
+                                   Class="px-0">
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@item.Tag.Name</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                @if (item.Count >= 3)
+                                {
+                                    <MListItemSubtitle>
+                                        @(I18n.T("Hand it to the monthly review 3.1"))
+                                    </MListItemSubtitle>
+                                }
+                            </MListItemContent>
+                            <MListItemAction>
+                                <span class="font-weight-bold me-3">@item.Count</span>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => RecordAsync(item))">
+                                    <MIcon>add_circle</MIcon>
+                                </MButton>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => AskDelete(item))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            </MListItemAction>
+                        </MListItem>
+                    }
+                </MList>
+            }
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="add"
+                   Show="true"
+                   OnClick="@(() => showAdd = true)">
+    </MyFloatButton>
+</div>
+
+<InputDialog @bind-Visible="showAdd"
+             Title="@(I18n.T("New trigger"))"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MaxLength="50"
+             OnOK="AddAsync">
+</InputDialog>
+
+<DeleteDialog @bind-Visible="showDelete"
+              Title="@(I18n.T("Delete trigger"))"
+              Content="@(I18n.T("Quick logs of it are removed with it. State records you actually wrote keep their text and only lose the trigger link."))"
+              OnOK="ConfirmDeleteAsync">
+</DeleteDialog>

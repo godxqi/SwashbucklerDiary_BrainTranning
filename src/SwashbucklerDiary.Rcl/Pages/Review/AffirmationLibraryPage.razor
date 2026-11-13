@@ -1,0 +1,75 @@
+@page "/affirmations"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@(I18n.T("Affirmation library"))"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            @*文档 4.2 的执行方式：写进日记、输进手机、贴在能看见的地方，每天多次用心重复*@
+            <div class="review-desc">@(I18n.T("Write them into your diary, put them in your phone or on sticky notes, and repeat them mindfully several times a day, imagining they are true."))</div>
+
+            <div class="review-subitem-label">@CountHint</div>
+
+            @if (affirmations.Count == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("No affirmation yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var item in affirmations)
+                    {
+                        <MListItem @key="item.Id"
+                                   Class="px-0">
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@item.Content</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                <MListItemSubtitle>
+                                    @*停用的不出现在复盘主页顶部条上，但历史与「用了几次」都留着*@
+                                    <wc-auto-scroll-text>@(item.IsActive ? "" : $"{I18n.T("Not active")} · ")@RepeatText(item)@(string.IsNullOrWhiteSpace(item.Source) ? "" : $" · {item.Source}")</wc-auto-scroll-text>
+                                </MListItemSubtitle>
+                            </MListItemContent>
+                            <MListItemAction>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => OpenEdit(item))">
+                                    <MIcon>edit</MIcon>
+                                </MButton>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => AskDelete(item))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            </MListItemAction>
+                        </MListItem>
+                    }
+                </MList>
+            }
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="add"
+                   Show="true"
+                   OnClick="OpenAdd">
+    </MyFloatButton>
+</div>
+
+<AffirmationEditDialog @bind-Visible="showEdit"
+                       Value="editingAffirmation"
+                       OnOK="SaveAsync">
+</AffirmationEditDialog>
+
+<DeleteDialog @bind-Visible="showDelete"
+              Title="@(I18n.T("Delete affirmation"))"
+              Content="@(I18n.T("This only removes it from the affirmation library. Text already written into diaries is untouched."))"
+              OnOK="ConfirmDeleteAsync">
+</DeleteDialog>

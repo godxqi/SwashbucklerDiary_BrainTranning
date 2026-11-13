@@ -1,0 +1,276 @@
+@page "/dailyReview"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar>
+        <MButton Icon="true"
+                 OnClick="NavigateToBack">
+            <MIcon>
+                arrow_back
+            </MIcon>
+        </MButton>
+
+        <MButton Icon="true"
+                 OnClick="@(() => GoDayAsync(-1))">
+            <MIcon>
+                chevron_left
+            </MIcon>
+        </MButton>
+
+        @*需求 13：顶部左右滑切日期。手势只挂在这块标题上，免得和下面的输入框抢选字。
+            「回到今天 / 去这周 / 去这月 / 删除这次日课」都在右边的 ⋮ 里——
+            顶栏只有宽度那么点，六个图标按钮会把日期标题挤没。*@
+        <div class="review-swipe-area"
+             @onpointerdown="HandlePointerDown"
+             @onpointerup="HandlePointerUpAsync"
+             @onclick="OpenDatePickerAsync">
+            <MToolbarTitle Class="font-weight-bold text-center">
+                <wc-auto-scroll-text>@selectedDate.ToString("yyyy/MM/dd")</wc-auto-scroll-text>
+            </MToolbarTitle>
+        </div>
+
+        <MButton Icon="true"
+                 OnClick="@(() => GoDayAsync(1))">
+            <MIcon>
+                chevron_right
+            </MIcon>
+        </MButton>
+
+        <MultiSizeMenu @bind-Visible="showMenu"
+                       DynamicListItems="menuItems">
+            <ActivatorContent>
+                <MButton @attributes="@context.Attrs"
+                         Icon="true">
+                    <MultiSizeDisplay>
+                        <DesktopContent>
+                            <MIcon>more_horiz</MIcon>
+                        </DesktopContent>
+                        <MobileContent>
+                            <MIcon>more_vert</MIcon>
+                        </MobileContent>
+                    </MultiSizeDisplay>
+                </MButton>
+            </ActivatorContent>
+        </MultiSizeMenu>
+    </MyAppBar>
+
+    <ScrollContainer>
+        @*严格按方法文档 1 的章节顺序：1.1 → 1.7，一节不缺。每节都带上「这要填什么」。*@
+        <div class="review-form">
+            @*书里 ch12 把「每周三目标」叫作「日记的骨架」——原话是
+               「每日三项积极事情 + 每周三目标是四步计划的最小可运行结构」。
+               所以写日课一进来就先让这一周的目标露一面。
+               只读：改目标和结算都在周课 2.3 / 2.4，这里只负责提醒你还剩什么没做。*@
+            @if (weekGoals.Count > 0)
+            {
+                <div class="review-picked">
+                    <div class="review-desc" style="margin-bottom:4px;">@(I18n.T("This week's goals"))</div>
+                    @foreach (var goal in weekGoals)
+                    {
+                        <div>
+                            @ReviewSectionText.DomainText(I18n, goal.Domain)
+                            · @goal.Content（@ReviewSectionText.StatusText(I18n, goal.Status)）
+                        </div>
+                    }
+                </div>
+            }
+
+            @*补足过去的日子时，先让人确认「这天确实是空的」。
+               桌面端日历上还标了点，手机端的日历标不了点（PMobileDatePicker 没有 Events），这句是那边的兜底。*@
+            @if (blankDay)
+            {
+                <div class="review-picked">
+                    @(I18n.T("Nothing written for this day yet. Filling it in will create a new entry."))
+                </div>
+            }
+
+            <div class="review-section">
+                <div class="review-label">1.1 @dailyTitles[0]</div>
+                <div class="review-desc">@dailyDescriptions[0]</div>
+                <MTextarea @bind-Value="sections.Life"
+                           @bind-Value:after="MarkDirty"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">1.2 @dailyTitles[1]</div>
+                <div class="review-desc">@dailyDescriptions[1]</div>
+                <MTextarea @bind-Value="sections.Study"
+                           @bind-Value:after="MarkDirty"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+            </div>
+
+            @*1.3 固定三条，所以预留三个框*@
+            <div class="review-section">
+                <div class="review-label">1.3 @dailyTitles[2]</div>
+                <div class="review-desc">@dailyDescriptions[2]</div>
+                @for (int i = 0; i < DailyReviewSections.ThreePositivesCount; i++)
+                {
+                    int index = i;
+                    <div class="review-subitem">
+                        <div class="review-subitem-label">@(index + 1)</div>
+                        <MTextarea @bind-Value="sections.ThreePositives[index]"
+                                   @bind-Value:after="MarkDirty"
+                                   Class="review-textarea"
+                                   Rows="2">
+                        </MTextarea>
+                    </div>
+                }
+            </div>
+
+            @*1.4 一组四问 = 一条微观失败。四问是针对「一个」失败的，一天可能不止一条，所以能加。*@
+            <div class="review-section">
+                <div class="review-label">1.4 @dailyTitles[3]</div>
+                <div class="review-desc">@dailyDescriptions[3]</div>
+                @for (int g = 0; g < sections.MicroFailures.Count; g++)
+                {
+                    int group = g;
+                    <div class="review-group">
+                        <div class="review-group-head">
+                            <span class="review-group-index">@(group + 1)</span>
+                            @if (sections.MicroFailures.Count > 1)
+                            {
+                                <MButton Icon="true"
+                                         OnClick="@(() => RemoveMicroFailure(group))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            }
+                        </div>
+                        @for (int q = 0; q < DailyReviewSections.MicroFailureQuestionCount; q++)
+                        {
+                            int question = q;
+                            <div class="review-subitem">
+                                <div class="review-subitem-label">@(question + 1). @microFailureQuestions[question]</div>
+                                <MTextarea @bind-Value="sections.MicroFailures[group][question]"
+                                           @bind-Value:after="MarkDirty"
+                                           Class="review-textarea"
+                                           Rows="2">
+                                </MTextarea>
+                            </div>
+                        }
+                    </div>
+                }
+                <MButton Class="review-add"
+                         OnClick="AddMicroFailure">
+                    <MIcon Left="true">add</MIcon>
+                    @(I18n.T("Add another micro failure"))
+                </MButton>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">1.5 @dailyTitles[4]</div>
+                <div class="review-desc">@dailyDescriptions[4]</div>
+                @*原先这里还有一排 1~5 的精力打分。2026-10-06 主人要求删掉：
+                   书里 ch05 明说复杂变化不适合用数字衡量，而且实测那个分值没有任何地方在读它
+                   （文档写的「连续一周偏低会被周课捡起来」从来没实现过），是个只写不用的数。
+                   1.5 现在只留这段散文——「什么给了你精力、什么让你分心」本来就该是文字。*@
+                <MTextarea @bind-Value="sections.EnergyNote"
+                           @bind-Value:after="MarkDirty"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">1.6 @dailyTitles[5]</div>
+                <div class="review-desc">@(I18n.T(ReviewSectionText.EmotionDescription))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var mood in moods)
+                    {
+                        <MChip @key="mood"
+                               Class="@ChipClass(review.Mood == mood)"
+                               Filter="true"
+                               IsActive="review.Mood == mood"
+                               OnClick="@(() => SelectMood(mood))">
+                            <MIcon Left="true">@GlobalConfiguration.GetEmotionIcon(mood)</MIcon>
+                            @(I18n.T(mood.ToString()))
+                        </MChip>
+                    }
+                </MChipGroup>
+                @*选中之后把这一节的说明换成该情绪本身的意思*@
+                @if (review.Mood is MoodKind selected)
+                {
+                    <div class="review-picked">@(I18n.T($"{selected} description"))</div>
+                }
+                @*命名只完成了一半：写清「被什么引起的」才是下次能认出来的线索。
+                   芯片取消选中之后只要还写着字，这一格就留着——不能让人以为写的没了。*@
+                @if (review.Mood is not null || !string.IsNullOrWhiteSpace(sections.MoodNote))
+                {
+                    <div class="review-desc">@(I18n.T("Naming it is only half of it. Write what brought this mood on - the thing, the person, the moment."))</div>
+                    <MTextarea @bind-Value="sections.MoodNote"
+                               @bind-Value:after="MarkDirty"
+                               Class="review-textarea"
+                               Rows="2">
+                    </MTextarea>
+                }
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">1.7 @(I18n.T("Self affirmation"))</div>
+                <div class="review-desc">@(I18n.T(ReviewSectionText.AffirmationDescription))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var affirmation in affirmations)
+                    {
+                        bool isOn = selectedAffirmationIds.Contains(affirmation.Id);
+                        <MChip @key="affirmation.Id"
+                               Class="@ChipClass(isOn)"
+                               Filter="true"
+                               IsActive="isOn"
+                               Close="true"
+                               OnCloseClick="@(() => AskDeleteAffirmation(affirmation))"
+                               OnClick="@(() => ToggleAffirmation(affirmation))">
+                            @affirmation.Content
+                        </MChip>
+                    }
+                    <MChip Class="review-chip"
+                           IsActive="false"
+                           OnClick="@(() => showAddAffirmation = true)">
+                        <MIcon Left="true">add</MIcon>
+                        @(I18n.T("Add"))
+                    </MChip>
+                </MChipGroup>
+            </div>
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="save"
+                   Show="true"
+                   OnClick="@(() => SaveAsync(true))">
+    </MyFloatButton>
+</div>
+
+<MultiSizeDatePicker @bind-Visible="showDatePicker"
+                     Value="@SelectedDate"
+                     ValueChanged="SwitchToDateAsync"
+                     Events="eventsDates"
+                     Max="@Today">
+</MultiSizeDatePicker>
+
+<InputDialog @bind-Visible="showAddAffirmation"
+             Title="@(I18n.T("Add affirmation"))"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MultiLine="true"
+             MaxLength="200"
+             OnOK="AddAffirmationAsync">
+</InputDialog>
+
+<DeleteDialog @bind-Visible="showDeleteDailyReview"
+              Title="@(I18n.T("Delete this daily review"))"
+              Content="@(I18n.T("This deletes the diary for that day as well, along with anything the weekly review decided about its micro failures."))"
+              OnOK="ConfirmDeleteDailyReviewAsync">
+</DeleteDialog>
+
+<DeleteDialog @bind-Visible="showDeleteAffirmation"
+              Title="@(I18n.T("Delete affirmation"))"
+              Content="@(I18n.T("This only removes it from the affirmation library. Text already written into diaries is untouched."))"
+              OnOK="ConfirmDeleteAffirmationAsync">
+</DeleteDialog>

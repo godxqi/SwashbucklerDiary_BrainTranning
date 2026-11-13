@@ -1,0 +1,116 @@
+@page "/virtue"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@KindName(kind)"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            @*三个表共用一页，切栏不换页*@
+            <MChipGroup Class="review-chip-group"
+                        Multiple="true">
+                @foreach (var item in kinds)
+                {
+                    <MChip @key="item"
+                           Class="@ChipClass(kind == item)"
+                           Filter="true"
+                           IsActive="kind == item"
+                           OnClick="@(() => SwitchKindAsync(item))">
+                        @KindName(item)
+                    </MChip>
+                }
+            </MChipGroup>
+
+            @*文档 6 的用法只有一个：状态糟的时候被调用*@
+            <div class="review-desc">@(I18n.T("These tables exist for one moment: when you are in a bad state, open one and read it."))</div>
+
+            @if (kind == VirtueKind.Achievement)
+            {
+                <div class="review-picked">@GrowthSummary</div>
+            }
+
+            <div class="review-desc">@KindDescription</div>
+
+            @*补过去的优点表：新记的几条算在哪一天，不再钉死成「今天」。*@
+            <div class="review-section">
+                <div class="review-desc">@(I18n.T("New entries are recorded on this date. Backfilling? Pick the day they belong to."))</div>
+                <MButton Class="review-add"
+                         OnClick="@(() => showDatePicker = true)">
+                    <MIcon Left="true">event</MIcon>
+                    @newEntryDate.ToString("yyyy/MM/dd")
+                </MButton>
+            </div>
+
+            @if (entries.Count == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("Nothing here yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var entry in entries)
+                    {
+                        <MListItem @key="entry.Id"
+                                   Class="px-0">
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@entry.Content</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                @if (kind == VirtueKind.Achievement)
+                                {
+                                    <MListItemSubtitle>
+                                        <wc-auto-scroll-text>@entry.Date.ToString("yyyy/MM/dd")</wc-auto-scroll-text>
+                                    </MListItemSubtitle>
+                                }
+                            </MListItemContent>
+                            <MListItemAction>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => OpenEdit(entry))">
+                                    <MIcon>edit</MIcon>
+                                </MButton>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => AskDelete(entry))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            </MListItemAction>
+                        </MListItem>
+                    }
+                </MList>
+            }
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="add"
+                   Show="true"
+                   OnClick="OpenAdd">
+    </MyFloatButton>
+</div>
+
+@*Text 是预填值：编辑时不传就等于给用户一个空白框，很容易以为内容丢了而重填覆盖 *@
+<InputDialog @bind-Visible="showEdit"
+             Text="@(editing ? editingEntry?.Content : null)"
+             Title="@(editing ? I18n.T("Edit") : KindName(kind))"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MaxLength="200"
+             OnOK="SaveAsync">
+</InputDialog>
+
+<MultiSizeDatePicker @bind-Visible="showDatePicker"
+                     Value="@SelectedDate"
+                     ValueChanged="NewEntryDateChanged"
+                     Max="@Today">
+</MultiSizeDatePicker>
+
+<DeleteDialog @bind-Visible="showDelete"
+              Title="@(I18n.T("Delete"))"
+              OnOK="ConfirmDeleteAsync">
+</DeleteDialog>

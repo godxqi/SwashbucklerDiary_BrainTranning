@@ -1,0 +1,65 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits DialogComponentBase
+
+<CustomMDialog MyValue="Visible"
+               MyValueChanged="InternalVisibleChanged"
+               ContentClass="rounded-lg"
+               MaxWidth="520"
+               DisableAutoFocus
+               OnBeforeShowContent="HandleOnBeforeShowContent">
+    <MCard>
+        <MCardTitle Class="font-weight-bold flex-nowrap">
+            <wc-auto-scroll-text>@(I18n.T("Limiting belief"))</wc-auto-scroll-text>
+            <MSpacer></MSpacer>
+            <MButton Icon
+                     OnClick="HandleOnCancel">
+                <MIcon>close</MIcon>
+            </MButton>
+        </MCardTitle>
+        <MCardText Class="pb-0">
+            <div class="weekly-goal-form">
+                @*第一列*@
+                <div class="review-label">@(I18n.T("The limiting belief"))</div>
+                <div class="review-desc">@(I18n.T("Stuck? Start with \"I am not...\" or \"I will not...\""))</div>
+                <MTextarea @bind-Value="belief.Assertion"
+                           Class="review-textarea"
+                           Rows="2">
+                </MTextarea>
+
+                @*第二列*@
+                <div class="review-label">@(I18n.T("What is the evidence for it?"))</div>
+                <MTextarea @bind-Value="belief.SupportingEvidence"
+                           Class="review-textarea"
+                           Rows="2">
+                </MTextarea>
+
+                @*第三列：3.2 提炼自我肯定的原料就是这一格*@
+                <div class="review-label">@(I18n.T("What is the evidence against it?"))</div>
+                <div class="review-desc">@(I18n.T("Look at it with suspicion: is the belief objectively true? This column is what 3.2 turns into affirmations."))</div>
+                <MTextarea @bind-Value="belief.CounterEvidence"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+
+                @*第四步*@
+                <div class="review-label">@(I18n.T("How much does this belief actually help your wellbeing?"))</div>
+                <MTextarea @bind-Value="belief.Utility"
+                           Class="review-textarea"
+                           Rows="2">
+                </MTextarea>
+            </div>
+        </MCardText>
+        <MCardActions Class="pt-0">
+            <MSpacer></MSpacer>
+            <MButton Text
+                     OnClick="HandleOnCancel">
+                @(I18n.T("Cancel"))
+            </MButton>
+            <MButton Text
+                     Color="primary"
+                     OnClick="HandleOnOK">
+                @(I18n.T("Save"))
+            </MButton>
+        </MCardActions>
+    </MCard>
+</CustomMDialog>

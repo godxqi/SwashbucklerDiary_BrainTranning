@@ -1,0 +1,170 @@
+@page "/stateRecord"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@(I18n.T("State record"))"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        @*文档 5 要求「完整表单一次填完」，所以这里一节都不折叠。*@
+
+        <div class="review-form">
+            <div class="review-desc">@(I18n.T(StateRecordText.Intro))</div>
+
+            @*补足过去的记录：这条记录「发生在什么时候」由人定，不默认钉死成「开始记的这一刻」。*@
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("When it happened"))</div>
+                <div class="review-desc">@(I18n.T(StateRecordText.OccurredTimeDescription))</div>
+                <MButton Class="review-add"
+                         OnClick="@(() => showDatePicker = true)">
+                    <MIcon Left="true">event</MIcon>
+                    @occurredTime.ToString("yyyy/MM/dd HH:mm")
+                </MButton>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("Current situation"))</div>
+                <div class="review-desc">@(I18n.T(StateRecordText.SceneDescription))</div>
+                <MTextarea @bind-Value="scene"
+                           @bind-Value:after="MarkDirty"
+                           Class="review-textarea"
+                           Rows="2">
+                </MTextarea>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("Trigger"))</div>
+                <div class="review-desc">@(I18n.T(StateRecordText.TriggerDescription))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var trigger in triggers)
+                    {
+                        <MChip @key="trigger.Tag.Id"
+                               Class="@ChipClass(triggerTagId == trigger.Tag.Id)"
+                               Filter="true"
+                               IsActive="triggerTagId == trigger.Tag.Id"
+                               OnClick="@(() => SelectTrigger(trigger.Tag.Id))">
+                            @trigger.Tag.Name
+                            <span class="review-group-index">@trigger.Count</span>
+                        </MChip>
+                    }
+                    <MChip Class="review-chip"
+                           IsActive="false"
+                           OnClick="@(() => showAddTrigger = true)">
+                        <MIcon Left="true">add</MIcon>
+                        @(I18n.T("Add"))
+                    </MChip>
+                </MChipGroup>
+            </div>
+
+            @*文档 5.1 把「当前感受」拆成四层：身体 / 心理 / 情感 / 精神。四格都要有，别合成一个框。*@
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("How it feels right now"))</div>
+                <div class="review-subitem">
+                    <div class="review-subitem-label">@(I18n.T("Physical")) — @(I18n.T(StateRecordText.BodyDescription))</div>
+                    <MTextarea @bind-Value="body"
+                               @bind-Value:after="MarkDirty"
+                               Class="review-textarea"
+                               Rows="2">
+                    </MTextarea>
+                </div>
+                <div class="review-subitem">
+                    <div class="review-subitem-label">@(I18n.T("Mental")) — @(I18n.T(StateRecordText.MindDescription))</div>
+                    <MTextarea @bind-Value="mind"
+                               @bind-Value:after="MarkDirty"
+                               Class="review-textarea"
+                               Rows="2">
+                    </MTextarea>
+                </div>
+                <div class="review-subitem">
+                    <div class="review-subitem-label">@(I18n.T("Emotional")) — @(I18n.T(StateRecordText.EmotionDescription))</div>
+                    <MTextarea @bind-Value="emotion"
+                               @bind-Value:after="MarkDirty"
+                               Class="review-textarea"
+                               Rows="2">
+                    </MTextarea>
+                </div>
+                <div class="review-subitem">
+                    <div class="review-subitem-label">@(I18n.T("Spiritual")) — @(I18n.T(StateRecordText.SpiritDescription))</div>
+                    <MTextarea @bind-Value="spirit"
+                               @bind-Value:after="MarkDirty"
+                               Class="review-textarea"
+                               Rows="2">
+                    </MTextarea>
+                </div>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("What is this emotion called"))</div>
+                <div class="review-desc">@(I18n.T(StateRecordText.EmotionNameDescription))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var mood in moods)
+                    {
+                        <MChip @key="mood"
+                               Class="@ChipClass(emotionName == mood)"
+                               Filter="true"
+                               IsActive="emotionName == mood"
+                               OnClick="@(() => SelectEmotionName(mood))">
+                            <MIcon Left="true">@GlobalConfiguration.GetEmotionIcon(mood)</MIcon>
+                            @(I18n.T(mood.ToString()))
+                        </MChip>
+                    }
+                </MChipGroup>
+                @if (emotionName is MoodKind selectedMood)
+                {
+                    <div class="review-picked">@(I18n.T($"{selectedMood} description"))</div>
+                }
+            </div>
+
+            @*这一格是整张表最重要的一格：三个优点表就是为这一刻建的。*@
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("What to call on"))</div>
+                <div class="review-desc">@(I18n.T(StateRecordText.CallOnDescription))</div>
+                <MButton Class="review-add"
+                         OnClick="@(() => showInvokedPicker = true)">
+                    <MIcon Left="true">menu_book</MIcon>
+                    @(invokedText is null ? I18n.T("Pick one") : invokedText)
+                </MButton>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("What to do now"))</div>
+                <div class="review-desc">@(I18n.T(StateRecordText.ActionNowDescription))</div>
+                <MTextarea @bind-Value="actionNow"
+                           @bind-Value:after="MarkDirty"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+            </div>
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="save"
+                   Show="true"
+                   OnClick="@(() => SaveAsync(true))">
+    </MyFloatButton>
+</div>
+
+<MultiSizeDatePicker @bind-Visible="showDatePicker"
+                     @bind-Value="SelectedDate"
+                     Max="@Today">
+</MultiSizeDatePicker>
+
+<InputDialog @bind-Visible="showAddTrigger"
+             Title="@(I18n.T("Add trigger"))"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MaxLength="50"
+             OnOK="AddTriggerAsync">
+</InputDialog>
+
+<InvokedPickerDialog @bind-Visible="showInvokedPicker"
+                     Kind="invokedKind"
+                     Id="invokedId"
+                     OnOK="SelectInvoked"
+                     OnClear="ClearInvoked">
+</InvokedPickerDialog>

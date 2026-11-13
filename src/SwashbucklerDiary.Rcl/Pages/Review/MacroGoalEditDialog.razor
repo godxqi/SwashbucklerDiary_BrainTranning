@@ -1,0 +1,63 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits DialogComponentBase
+
+<CustomMDialog MyValue="Visible"
+               MyValueChanged="InternalVisibleChanged"
+               ContentClass="rounded-lg"
+               MaxWidth="480"
+               DisableAutoFocus
+               OnBeforeShowContent="HandleOnBeforeShowContent">
+    <MCard>
+        <MCardTitle Class="font-weight-bold flex-nowrap">
+            <wc-auto-scroll-text>@(I18n.T("Macro goal"))</wc-auto-scroll-text>
+            <MSpacer></MSpacer>
+            <MButton Icon
+                     OnClick="HandleOnCancel">
+                <MIcon>close</MIcon>
+            </MButton>
+        </MCardTitle>
+        <MCardText Class="pb-0">
+            <div class="review-label">@(I18n.T("Direction"))</div>
+            <MTextarea @bind-Value="goal.Title"
+                       Class="review-textarea"
+                       Rows="2">
+            </MTextarea>
+
+            <div class="review-label">@(I18n.T("Note"))</div>
+            <MTextarea @bind-Value="goal.Description"
+                       Class="review-textarea"
+                       Rows="2">
+            </MTextarea>
+
+            @*文档第 0 节：可以试着把三个方向各挂到一个领域上；挂不上也没关系*@
+            <div class="review-label">@(I18n.T("Domain"))</div>
+            <div class="review-desc">@(I18n.T("Attaching a direction to a domain is optional."))</div>
+            <MChipGroup Class="review-chip-group"
+                        Multiple="true">
+                @foreach (var item in domains)
+                {
+                    bool isOn = goal.Domain == item;
+                    <MChip @key="item"
+                           Class="@ChipClass(isOn)"
+                           Filter="true"
+                           IsActive="isOn"
+                           OnClick="@(() => ToggleDomain(item))">
+                        @DomainText(item)
+                    </MChip>
+                }
+            </MChipGroup>
+        </MCardText>
+        <MCardActions Class="pt-0">
+            <MSpacer></MSpacer>
+            <MButton Text
+                     OnClick="HandleOnCancel">
+                @(I18n.T("Cancel"))
+            </MButton>
+            <MButton Text
+                     Color="primary"
+                     OnClick="HandleOnOK">
+                @(I18n.T("Save"))
+            </MButton>
+        </MCardActions>
+    </MCard>
+</CustomMDialog>

@@ -1,0 +1,82 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits DialogComponentBase
+
+<CustomMDialog MyValue="Visible"
+               MyValueChanged="InternalVisibleChanged"
+               ContentClass="rounded-lg"
+               MaxWidth="560"
+               DisableAutoFocus
+               OnBeforeShowContent="HandleOnBeforeShowContent">
+    <MCard>
+        <MCardTitle Class="font-weight-bold flex-nowrap">
+            <wc-auto-scroll-text>@(I18n.T("What to call on"))</wc-auto-scroll-text>
+            <MSpacer></MSpacer>
+            <MButton Icon
+                     OnClick="HandleOnCancel">
+                <MIcon>close</MIcon>
+            </MButton>
+        </MCardTitle>
+        <MCardText Class="pb-0">
+            <div class="review-desc">@(I18n.T(StateRecordText.CallOnDescription))</div>
+
+            @*三个优点表在 5.1 里是被分开翻的三栏，肯定库与宏观目标是另外两个可调用的库*@
+            <MChipGroup Class="review-chip-group"
+                        Multiple="true">
+                @for (int i = 0; i < sourceKeys.Length; i++)
+                {
+                    int index = i;
+                    <MChip @key="index"
+                           Class="@ChipClass(sourceIndex == index)"
+                           Filter="true"
+                           IsActive="sourceIndex == index"
+                           OnClick="@(() => SelectSource(index))">
+                        @(I18n.T(sourceKeys[index]))
+                    </MChip>
+                }
+            </MChipGroup>
+
+            @if (CurrentCount == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("Nothing here yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var item in CurrentItems)
+                    {
+                        <MListItem @key="item.Id"
+                                   OnClick="@(() => Choose(item))">
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@item.Text</wc-auto-scroll-text>
+                                </MListItemTitle>
+                            </MListItemContent>
+                            @if (item.Id == SelectedId)
+                            {
+                                <MListItemAction>
+                                    <MIcon>check</MIcon>
+                                </MListItemAction>
+                            }
+                        </MListItem>
+                    }
+                </MList>
+            }
+        </MCardText>
+        <MCardActions Class="pt-0">
+            @if (HasSelection)
+            {
+                <MButton Text
+                         OnClick="HandleOnClear">
+                    @(I18n.T("Clear"))
+                </MButton>
+            }
+            <MSpacer></MSpacer>
+            <MButton Text
+                     OnClick="HandleOnCancel">
+                @(I18n.T("Cancel"))
+            </MButton>
+        </MCardActions>
+    </MCard>
+</CustomMDialog>

@@ -1,0 +1,40 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits MyComponentBase
+
+@*统计页里的一行：条目名 + 进度条 + 数值。
+  条形用项目里已经跑通的 <see cref="MProgressLinear"/>（成就卡就是它），**不自己搭 flex 行**——
+  第一版自己写了「flex 标题行 + div 轨道」，真机上整行宽度算飞，数值被挤到屏幕外看不见了。
+  这和阶段 3 那次「自搭 flex 步进条宽度算飞」是同一类错误：这个项目里凡是横排都要用现成组件。
+  数值一直以文字出现（印在条里），所以读的人不必靠颜色深浅去猜大小。*@
+<div class="stats-row">
+    <div class="stats-row-label">@Label</div>
+    <MProgressLinear Value="@WidthPercent"
+                     Class="rounded-pill"
+                     Color="rgba(var(--m-theme-on-surface), 0.72)"
+                     Height="20">
+        <strong class="stats-row-value"
+                style="color:@(ValueColor);">
+            @Value
+        </strong>
+    </MProgressLinear>
+</div>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    /// <summary>条的填充比例，0 ~ 100。</summary>
+    [Parameter]
+    public double WidthPercent { get; set; }
+
+    /// <summary>
+    /// 数值印在条里，所以条的填充过半时要换成反色，否则深底深字。
+    /// 和成就卡同一个思路（那里是按「是否已达成」切色）。
+    /// </summary>
+    private string ValueColor => WidthPercent >= 60
+        ? "rgba(var(--m-theme-inverse-on-surface))"
+        : "rgba(var(--m-theme-on-surface))";
+}

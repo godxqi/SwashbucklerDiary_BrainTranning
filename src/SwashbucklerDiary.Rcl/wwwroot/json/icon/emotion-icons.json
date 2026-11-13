@@ -1,0 +1,10 @@
+{
+  "Fear": "mdi:mdi-emoticon-frown-outline",
+  "Anger": "mdi:mdi-emoticon-angry-outline",
+  "Disgust": "mdi:mdi-emoticon-dead-outline",
+  "Shame": "mdi:mdi-emoticon-cry-outline",
+  "Sadness": "mdi:mdi-emoticon-sad-outline",
+  "Joy": "mdi:mdi-emoticon-excited-outline",
+  "Love": "mdi:mdi-emoticon-happy-outline",
+  "Surprise": "mdi:mdi-emoticon-confused-outline"
+}

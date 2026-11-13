@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 核对工具：只引用 Shared（纯 net10.0、无第三方包），验证日课正文的「章节 与 字段」往返。
+       跑法见同目录 README-核对.md -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>roundtrip-daily-sections</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/SwashbucklerDiary.Shared/SwashbucklerDiary.Shared.csproj" />
+  </ItemGroup>
+</Project>

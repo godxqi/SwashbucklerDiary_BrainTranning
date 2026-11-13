@@ -1,0 +1,67 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits DialogComponentBase
+
+<CustomMDialog MyValue="Visible"
+               MyValueChanged="InternalVisibleChanged"
+               ContentClass="rounded-lg"
+               MaxWidth="520"
+               DisableAutoFocus
+               OnBeforeShowContent="HandleOnBeforeShowContent">
+    <MCard>
+        <MCardTitle Class="font-weight-bold flex-nowrap">
+            <wc-auto-scroll-text>@(I18n.T("Enemy"))</wc-auto-scroll-text>
+            <MSpacer></MSpacer>
+            <MButton Icon
+                     OnClick="HandleOnCancel">
+                <MIcon>close</MIcon>
+            </MButton>
+        </MCardTitle>
+        <MCardText Class="pb-0">
+            <div class="weekly-goal-form">
+                @*第一列：定位器是「已经计划了相当一段时间、却一直未能实现」的目标*@
+                <div class="review-label">@(I18n.T("Goal"))</div>
+                <div class="review-desc">@(I18n.T("Something you have planned for a long time and never got to. Fitness, a new job, marriage - that kind of thing."))</div>
+                <MTextarea @bind-Value="enemy.Goal"
+                           Class="review-textarea"
+                           Rows="2">
+                </MTextarea>
+
+                @*第二列：写行为，不是写想法*@
+                <div class="review-label">@(I18n.T("Blocking behaviour"))</div>
+                <div class="review-desc">@(I18n.T("Write behaviour, not thoughts. \"I scroll until 1am every night\", not \"I lack discipline\"."))</div>
+                <MTextarea @bind-Value="enemy.BlockingBehavior"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+
+                @*第三列：驱动这种行为的最深层观念*@
+                <div class="review-label">@(I18n.T("Deep belief"))</div>
+                <div class="review-desc">@(I18n.T("The belief driving that behaviour. The most hidden and most deadly one is feeling you do not deserve the future you want."))</div>
+                <MTextarea @bind-Value="enemy.DeepBelief"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+
+                @*打击手段③：最容易被跳过也最关键的一步*@
+                <div class="review-label">@(I18n.T("One concrete action this week"))</div>
+                <div class="review-desc">@(I18n.T("One concrete action you can finish this week. Without it the table is only reflection - this is the line that can be carried into next week's goals."))</div>
+                <MTextarea @bind-Value="enemy.WeeklyAction"
+                           Class="review-textarea"
+                           Rows="2">
+                </MTextarea>
+            </div>
+        </MCardText>
+        <MCardActions Class="pt-0">
+            <MSpacer></MSpacer>
+            <MButton Text
+                     OnClick="HandleOnCancel">
+                @(I18n.T("Cancel"))
+            </MButton>
+            <MButton Text
+                     Color="primary"
+                     OnClick="HandleOnOK">
+                @(I18n.T("Save"))
+            </MButton>
+        </MCardActions>
+    </MCard>
+</CustomMDialog>

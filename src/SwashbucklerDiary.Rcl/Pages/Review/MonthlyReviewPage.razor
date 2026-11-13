@@ -1,0 +1,409 @@
+@page "/monthlyReview"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar>
+        <MButton Icon="true"
+                 OnClick="NavigateToBack">
+            <MIcon>
+                arrow_back
+            </MIcon>
+        </MButton>
+
+        <MButton Icon="true"
+                 OnClick="@(() => GoMonthAsync(-1))">
+            <MIcon>
+                chevron_left
+            </MIcon>
+        </MButton>
+
+        @*点日期开日历：任意过去的一个月都能直接跳到，不用一个月一个月倒着滑。
+           「回到今天 / 跳过这一月」都在右边的 ⋮ 里，顶栏保住宽度。*@
+        <div class="review-swipe-area"
+             @onclick="OpenDatePickerAsync">
+            <MToolbarTitle Class="font-weight-bold text-center">
+                <wc-auto-scroll-text>@MonthRange</wc-auto-scroll-text>
+            </MToolbarTitle>
+        </div>
+
+        <MButton Icon="true"
+                 OnClick="@(() => GoMonthAsync(1))">
+            <MIcon>
+                chevron_right
+            </MIcon>
+        </MButton>
+
+        <MultiSizeMenu @bind-Visible="showMenu"
+                       DynamicListItems="menuItems">
+            <ActivatorContent>
+                <MButton @attributes="@context.Attrs"
+                         Icon="true">
+                    <MultiSizeDisplay>
+                        <DesktopContent>
+                            <MIcon>more_horiz</MIcon>
+                        </DesktopContent>
+                        <MobileContent>
+                            <MIcon>more_vert</MIcon>
+                        </MobileContent>
+                    </MultiSizeDisplay>
+                </MButton>
+            </ActivatorContent>
+        </MultiSizeMenu>
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            @if (review?.IsSkipped == true)
+            {
+                <div class="review-picked">
+                    @(I18n.T("This month is skipped - it will not count as owed in the stats. Writing anything here cancels the skip."))
+                </div>
+            }
+
+            @*四步是带闸门的向导：做完的加深，当前的选中，没解锁的点了没反应。
+              用芯片而不是自搭的 flex 条——自搭那版在真机上宽度算飞了（每段 926px、整行溢出屏幕），
+              而芯片这一套（review-chip-group）是项目里已经跑通的。*@
+            <MChipGroup Class="review-chip-group"
+                        Multiple="true">
+                @for (int s = 1; s <= StepCount; s++)
+                {
+                    int at = s;
+                    <MChip @key="at"
+                           Class="@StepClass(at)"
+                           Filter="true"
+                           IsActive="at == step"
+                           OnClick="@(() => GoToStepAsync(at))">
+                        @StepChipLabel(at)
+                    </MChip>
+                }
+            </MChipGroup>
+
+            <div class="review-section">
+                <div class="review-label">@StepLabel(step)</div>
+                <div class="review-desc">@StepDescription(step)</div>
+
+                @*3.1 三列审视：最多六条。素材来自攒够 3 次的触因与这一月反复出现的绊脚石。*@
+                @if (step == 1)
+                {
+                    @if (readyTriggers.Count > 0 || FrequentCategories.Count > 0)
+                    {
+                        <div class="review-subitem-label">@(I18n.T("Material for this step"))</div>
+
+                        @foreach (var trigger in readyTriggers)
+                        {
+                            <div @key="trigger.Tag.Id"
+                                 class="review-candidate"
+                                 @onclick="@(() => UseTriggerAsBelief(trigger))">
+                                <div class="review-group-index">@($"{trigger.Tag.Name} ×{trigger.Count}")</div>
+                                <div class="review-desc">@(I18n.T("Turn this repeated trigger into a limiting belief"))</div>
+                            </div>
+                        }
+
+                        @foreach (var item in FrequentCategories)
+                        {
+                            <div @key="item.Category"
+                                 class="review-candidate"
+                                 @onclick="@(() => UseCategoryAsBelief(item.Category))">
+                                <div class="review-group-index">@($"{item.Category} ×{item.Count}")</div>
+                                <div class="review-desc">@(I18n.T("Turn this repeated stumbling block into a limiting belief"))</div>
+                            </div>
+                        }
+                    }
+
+                    @if (beliefs.Count == 0)
+                    {
+                        <div class="review-desc">@(I18n.T("No limiting belief yet"))</div>
+                    }
+                    else
+                    {
+                        @for (int b = 0; b < beliefs.Count; b++)
+                        {
+                            int index = b;
+                            var belief = beliefs[index];
+                            <div @key="belief.Id"
+                                 class="review-group">
+                                <div class="review-group-head">
+                                    <span class="review-group-index">@($"{index + 1}. {belief.Assertion}")</span>
+                                    <MButton Icon="true"
+                                             Small="true"
+                                             OnClick="@(() => ArchiveBeliefAsync(belief))">
+                                        <MIcon>inventory_2</MIcon>
+                                    </MButton>
+                                    <MButton Icon="true"
+                                             Small="true"
+                                             OnClick="@(() => OpenBeliefDialog(belief))">
+                                        <MIcon>edit</MIcon>
+                                    </MButton>
+                                    <MButton Icon="true"
+                                             Small="true"
+                                             OnClick="@(() => AskDeleteBelief(belief))">
+                                        <MIcon>close</MIcon>
+                                    </MButton>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(belief.SupportingEvidence))
+                                {
+                                    <div class="review-desc"><b>@(I18n.T("Supporting evidence"))</b> @belief.SupportingEvidence</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(belief.CounterEvidence))
+                                {
+                                    <div class="review-desc"><b>@(I18n.T("Counter evidence"))</b> @belief.CounterEvidence</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(belief.Utility))
+                                {
+                                    <div class="review-desc"><b>@(I18n.T("How much does this belief actually help your wellbeing?"))</b> @belief.Utility</div>
+                                }
+                            </div>
+                        }
+                    }
+
+                    <div class="review-subitem-label">@($"{I18n.T("Limiting belief")} · {BeliefCountHint}")</div>
+                    <MButton Class="review-add"
+                             Disabled="beliefs.Count >= MaxBeliefs"
+                             OnClick="@(() => OpenBeliefDialog(null))">
+                        <MIcon Left="true">add</MIcon>
+                        @(I18n.T("Add limiting belief"))
+                    </MButton>
+                }
+
+                @*3.2 出口：把第三列的反对性陈述提炼成短语。书里说这是唯一一条明写的收敛路径。*@
+                @if (step == 2)
+                {
+                    @if (CounterEvidenceSources.Count == 0)
+                    {
+                        <div class="review-desc">@(I18n.T("Go back to 3.1 and fill in the counter-evidence column first."))</div>
+                    }
+                    else
+                    {
+                        @foreach (var belief in CounterEvidenceSources)
+                        {
+                            <div @key="belief.Id"
+                                 class="review-group">
+                                <div class="review-group-head">
+                                    <span class="review-group-index">@belief.Assertion</span>
+                                </div>
+                                <div class="review-desc">@belief.CounterEvidence</div>
+                                <MButton Class="review-add"
+                                         OnClick="@(() => OpenPhraseDialog(belief))">
+                                    <MIcon Left="true">arrow_downward</MIcon>
+                                    @(I18n.T("Turn it into a phrase"))
+                                </MButton>
+                            </div>
+                        }
+                    }
+
+                    <div class="review-subitem-label">@AffirmationHint</div>
+
+                    @foreach (var item in producedAffirmations)
+                    {
+                        <div @key="item.Id"
+                             class="review-group">
+                            <div class="review-group-head">
+                                <span class="review-group-index">@item.Content</span>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => AskDeleteAffirmation(item))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(item.Source))
+                            {
+                                <div class="review-desc">@(I18n.T("Where it came from")): @item.Source</div>
+                            }
+                        </div>
+                    }
+
+                    <MButton Class="review-add"
+                             OnClick="@(() => OpenPhraseDialog(null))">
+                        <MIcon Left="true">add</MIcon>
+                        @(I18n.T("Add phrase"))
+                    </MButton>
+                }
+
+                @*3.3 自我补偿：不许跳过。三列审视是全系统唯一一个专门挖痛处的动作。*@
+                @if (step == 3)
+                {
+                    <div class="review-subitem-label">@(I18n.T("What you decided"))</div>
+                    <MTextarea @bind-Value="step33Note"
+                               @bind-Value:after="MarkDirty"
+                               Class="review-textarea"
+                               Rows="5">
+                    </MTextarea>
+
+                    <MButton Class="review-add"
+                             OnClick="@(() => showAddPositive = true)">
+                        <MIcon Left="true">favorite</MIcon>
+                        @(I18n.T("Add someone to the positive list"))
+                    </MButton>
+                }
+
+                @*3.4 敌人表：针对目标，不是针对信念。第三列是敌人，打击手段③带进下周目标。*@
+                @if (step == 4)
+                {
+                    @if (enemies.Count == 0)
+                    {
+                        <div class="review-desc">@(I18n.T("No enemy row yet"))</div>
+                    }
+                    else
+                    {
+                        @for (int e = 0; e < enemies.Count; e++)
+                        {
+                            int index = e;
+                            var enemy = enemies[index];
+                            <div @key="enemy.Id"
+                                 class="review-group">
+                                <div class="review-group-head">
+                                    <span class="review-group-index">@($"{index + 1}. {enemy.Goal}")</span>
+                                    <MButton Icon="true"
+                                             Small="true"
+                                             OnClick="@(() => OpenEnemyDialog(enemy))">
+                                        <MIcon>edit</MIcon>
+                                    </MButton>
+                                    <MButton Icon="true"
+                                             Small="true"
+                                             OnClick="@(() => AskDeleteEnemy(enemy))">
+                                        <MIcon>close</MIcon>
+                                    </MButton>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(enemy.BlockingBehavior))
+                                {
+                                    <div class="review-desc"><b>@(I18n.T("Blocking behaviour"))</b> @enemy.BlockingBehavior</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(enemy.DeepBelief))
+                                {
+                                    <div class="review-desc"><b>@(I18n.T("Deep belief"))</b> @enemy.DeepBelief</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(enemy.WeeklyAction))
+                                {
+                                    <div class="review-desc"><b>@(I18n.T("One concrete action this week"))</b> @enemy.WeeklyAction</div>
+                                    <MButton Class="review-add"
+                                             OnClick="@(() => PushToNextWeekAsync(enemy))">
+                                        <MIcon Left="true">arrow_forward</MIcon>
+                                        @(I18n.T("Carry into next week's goals"))
+                                    </MButton>
+                                }
+                            </div>
+                        }
+                    }
+
+                    <div class="review-subitem-label">@($"{I18n.T("Enemy")} · {EnemyCountHint}")</div>
+                    <MButton Class="review-add"
+                             Disabled="enemies.Count >= MaxEnemies"
+                             OnClick="@(() => OpenEnemyDialog(null))">
+                        <MIcon Left="true">add</MIcon>
+                        @(I18n.T("Add enemy"))
+                    </MButton>
+                }
+            </div>
+
+            @*闸门拦住人的时候要说清楚还差什么，不能只是把按钮变灰*@
+            <div class="review-section">
+                @if (!GatePassed(step))
+                {
+                    <div class="review-picked">@GateHint(step)</div>
+                }
+
+                <div class="d-flex align-center">
+                    <MButton Disabled="step <= 1"
+                             OnClick="@(() => GoStepAsync(-1))">
+                        <MIcon Left="true">chevron_left</MIcon>
+                        @(I18n.T("Previous step"))
+                    </MButton>
+
+                    @if (step < StepCount)
+                    {
+                        <MSpacer></MSpacer>
+                        <MButton Disabled="@(!GatePassed(step))"
+                                 OnClick="@(() => GoStepAsync(1))">
+                            @(I18n.T("Next step"))
+                            <MIcon Right="true">chevron_right</MIcon>
+                        </MButton>
+                    }
+                </div>
+            </div>
+
+            @*节拍判定只认这一个开关。不点它，复盘主页会把这一月一直算成「已逾期」。*@
+            @if (step == StepCount)
+            {
+                <div class="review-section">
+                    @if (review?.IsFinalized == true)
+                    {
+                        <div class="review-picked">
+                            @($"{I18n.T("Completed")} · {review.FinalizedTime:yyyy/MM/dd HH:mm}")
+                        </div>
+                    }
+
+                    <MButton Class="review-add"
+                             Disabled="@(!gates.AllDone)"
+                             OnClick="FinishAsync">
+                        <MIcon Left="true">task_alt</MIcon>
+                        @(I18n.T("Finish this month's review"))
+                    </MButton>
+                </div>
+            }
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="save"
+                   Show="true"
+                   OnClick="SaveAsync">
+    </MyFloatButton>
+</div>
+
+<LimitingBeliefEditDialog @bind-Visible="showBeliefDialog"
+                          Value="editingBelief"
+                          MonthlyReviewId="@(review?.Id ?? Guid.Empty)"
+                          OnOK="SaveBeliefAsync">
+</LimitingBeliefEditDialog>
+
+<EnemyEditDialog @bind-Visible="showEnemyDialog"
+                 Value="editingEnemy"
+                 MonthlyReviewId="@(review?.Id ?? Guid.Empty)"
+                 OnOK="SaveEnemyAsync">
+</EnemyEditDialog>
+
+<AffirmationEditDialog @bind-Visible="showPhraseDialog"
+                       DefaultSource="@phraseSource?.Assertion"
+                       OnOK="AddPhraseAsync">
+</AffirmationEditDialog>
+
+@*3.4 打击手段③的落点：目标卡挂在下周的周课记录上*@
+<MultiSizeDatePicker @bind-Visible="showDatePicker"
+                     Value="@SelectedDate"
+                     ValueChanged="SwitchToDateAsync"
+                     Events="eventsDates"
+                     Max="@Today">
+</MultiSizeDatePicker>
+
+<WeeklyGoalEditDialog @bind-Visible="showGoalDialog"
+                      Value="editingGoal"
+                      WeeklyReviewId="@(editingGoal?.WeeklyReviewId ?? Guid.Empty)"
+                      OnOK="SaveGoalAsync">
+</WeeklyGoalEditDialog>
+
+<InputDialog @bind-Visible="showAddPositive"
+             Title="@(I18n.T("Add someone to the positive list"))"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MaxLength="50"
+             OnOK="AddPositiveAsync">
+</InputDialog>
+
+<DeleteDialog @bind-Visible="showDeleteBelief"
+              Title="@(I18n.T("Delete limiting belief"))"
+              OnOK="ConfirmDeleteBeliefAsync">
+</DeleteDialog>
+
+<DeleteDialog @bind-Visible="showDeleteEnemy"
+              Title="@(I18n.T("Delete enemy"))"
+              OnOK="ConfirmDeleteEnemyAsync">
+</DeleteDialog>
+
+<DeleteDialog @bind-Visible="showDeleteAffirmation"
+              Title="@(I18n.T("Delete affirmation"))"
+              Content="@(I18n.T("This only removes it from the affirmation library. Text already written into diaries is untouched."))"
+              OnOK="ConfirmDeleteAffirmationAsync">
+</DeleteDialog>

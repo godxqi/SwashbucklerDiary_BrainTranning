@@ -1,0 +1,72 @@
+@page "/macroGoals"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@(I18n.T("Macro goal"))"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            <div class="review-desc">
+                @(I18n.T("These three directions are the anchor of the whole system. A weekly goal is a small step toward one of them, so the R in SMART has something to point at."))
+            </div>
+
+            @if (goals.Count == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("No macro goal yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var goal in goals)
+                    {
+                        <MListItem @key="goal.Id"
+                                   Class="px-0">
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@goal.Title</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                <MListItemSubtitle>
+                                    <wc-auto-scroll-text>@DomainText(goal.Domain)@(string.IsNullOrWhiteSpace(goal.Description) ? "" : $" · {goal.Description}")</wc-auto-scroll-text>
+                                </MListItemSubtitle>
+                            </MListItemContent>
+                            <MListItemAction>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => OpenEdit(goal))">
+                                    <MIcon>edit</MIcon>
+                                </MButton>
+                                <MButton Icon="true"
+                                         Small="true"
+                                         OnClick="@(() => AskDelete(goal))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            </MListItemAction>
+                        </MListItem>
+                    }
+                </MList>
+            }
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="add"
+                   Show="true"
+                   OnClick="@(() => OpenEdit(null))">
+    </MyFloatButton>
+</div>
+
+<MacroGoalEditDialog @bind-Visible="showEdit"
+                     Value="editingGoal"
+                     OnOK="SaveAsync">
+</MacroGoalEditDialog>
+
+<DeleteDialog @bind-Visible="showDelete"
+              Title="@(I18n.T("Delete macro goal"))"
+              OnOK="ConfirmDeleteAsync">
+</DeleteDialog>

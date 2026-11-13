@@ -1,0 +1,10 @@
+{
+  "Boundary": "mdi:mdi-fence",
+  "BeingJudged": "mdi:mdi-eye-outline",
+  "Trust": "mdi:mdi-handshake-outline",
+  "Expression": "mdi:mdi-forum-outline",
+  "Conflict": "mdi:mdi-sword-cross",
+  "Dependence": "mdi:mdi-link-variant",
+  "Intimacy": "mdi:mdi-heart-outline",
+  "Authority": "mdi:mdi-shield-account-outline"
+}

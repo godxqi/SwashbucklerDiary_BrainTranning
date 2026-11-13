@@ -1,0 +1,131 @@
+@page "/statistics"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<MyAppBar>
+    <MToolbarTitle Class="font-weight-bold flex-grow-1">
+        <wc-auto-scroll-text>@(I18n.T("Statistics"))</wc-auto-scroll-text>
+    </MToolbarTitle>
+</MyAppBar>
+
+<ScrollContainer>
+    <div class="review-form">
+        @*需求 16 的两块：节拍完成度 + 高频模式。时间段只影响下面两张排行，
+           完成度与成就增长各自按「已经走完的周期」算，跟着这个芯片走没有意义。*@
+        <MChipGroup Class="review-chip-group"
+                    Multiple="true">
+            @for (int i = 0; i < periodKeys.Length; i++)
+            {
+                int index = i;
+                <MChip @key="index"
+                       Class="@ChipClass(periodIndex == index)"
+                       Filter="true"
+                       IsActive="periodIndex == index"
+                       OnClick="@(() => SelectPeriodAsync(index))">
+                    @(I18n.T(periodKeys[index]))
+                </MChip>
+            }
+        </MChipGroup>
+
+        <MCard Class="mb-5"
+               Elevation="0"
+               Rounded="@("lg")">
+            <MCardTitle Class="font-weight-bold">
+                <wc-auto-scroll-text>@(I18n.T("Rhythm completion"))</wc-auto-scroll-text>
+            </MCardTitle>
+            <MCardText>
+                <StatsBarRow Label="@I18n.T("Daily review")"
+                             Value="@FormatStat(dailyStat)"
+                             WidthPercent="@dailyStat.Percent">
+                </StatsBarRow>
+                <StatsBarRow Label="@I18n.T("Weekly review")"
+                             Value="@FormatStat(weeklyStat)"
+                             WidthPercent="@weeklyStat.Percent">
+                </StatsBarRow>
+                <StatsBarRow Label="@I18n.T("Monthly review")"
+                             Value="@FormatStat(monthlyStat)"
+                             WidthPercent="@monthlyStat.Percent">
+                </StatsBarRow>
+            </MCardText>
+        </MCard>
+
+        <MCard Class="mb-5"
+               Elevation="0"
+               Rounded="@("lg")">
+            <MCardTitle Class="font-weight-bold">
+                <wc-auto-scroll-text>@(I18n.T("Micro failure ranking"))</wc-auto-scroll-text>
+            </MCardTitle>
+            <MCardText>
+                @if (failures.Count == 0)
+                {
+                    <div class="review-desc">@(I18n.T("No data yet"))</div>
+                }
+                else
+                {
+                    @foreach (var item in failures)
+                    {
+                        <StatsBarRow @key="item.Label"
+                                     Label="@item.Label"
+                                     Value="@item.Count.ToString()"
+                                     WidthPercent="@PercentOf(item.Count, failures[0].Count)">
+                        </StatsBarRow>
+                    }
+                }
+            </MCardText>
+        </MCard>
+
+        <MCard Class="mb-5"
+               Elevation="0"
+               Rounded="@("lg")">
+            <MCardTitle Class="font-weight-bold">
+                <wc-auto-scroll-text>@(I18n.T("Trigger ranking"))</wc-auto-scroll-text>
+            </MCardTitle>
+            <MCardText>
+                @if (triggers.Count == 0)
+                {
+                    <div class="review-desc">@(I18n.T("No data yet"))</div>
+                }
+                else
+                {
+                    @foreach (var item in triggers)
+                    {
+                        <StatsBarRow @key="item.Tag.Id"
+                                     Label="@item.Tag.Name"
+                                     Value="@item.Count.ToString()"
+                                     WidthPercent="@PercentOf(item.Count, triggers[0].Count)">
+                        </StatsBarRow>
+                    }
+                }
+            </MCardText>
+        </MCard>
+
+        <MCard Class="mb-5"
+               Elevation="0"
+               Rounded="@("lg")">
+            <MCardTitle Class="font-weight-bold">
+                <wc-auto-scroll-text>@(I18n.T("Achievement growth"))</wc-auto-scroll-text>
+            </MCardTitle>
+            <MCardText>
+                @*文档 6.3：「观察成就列表的增长情况，并把它当作指导」——所以先给一个总数与本月增量*@
+                <div class="stats-hero">
+                    @($"{I18n.T("Total")} {achievementTotal} · {I18n.T("This month")} +{achievementThisMonth}")
+                </div>
+                @if (achievements.Count == 0)
+                {
+                    <div class="review-desc">@(I18n.T("No data yet"))</div>
+                }
+                else
+                {
+                    @foreach (var item in achievements)
+                    {
+                        <StatsBarRow @key="(item.Year, item.Month)"
+                                     Label="@($"{item.Year}/{item.Month:00}")"
+                                     Value="@item.Count.ToString()"
+                                     WidthPercent="@PercentOf(item.Count, MaxAchievement)">
+                        </StatsBarRow>
+                    }
+                }
+            </MCardText>
+        </MCard>
+    </div>
+</ScrollContainer>

@@ -1,0 +1,441 @@
+@page "/weeklyReview"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar>
+        <MButton Icon="true"
+                 OnClick="NavigateToBack">
+            <MIcon>
+                arrow_back
+            </MIcon>
+        </MButton>
+
+        <MButton Icon="true"
+                 OnClick="@(() => GoWeekAsync(-1))">
+            <MIcon>
+                chevron_left
+            </MIcon>
+        </MButton>
+
+        @*点日期开日历：任意过去的某一周都能直接跳到，不用一周一周倒着滑。
+           「回到今天 / 去这月 / 跳过这一周」都在右边的 ⋮ 里，顶栏保住宽度。*@
+        <div class="review-swipe-area"
+             @onclick="OpenDatePickerAsync">
+            <MToolbarTitle Class="font-weight-bold text-center">
+                <wc-auto-scroll-text>@WeekRange</wc-auto-scroll-text>
+            </MToolbarTitle>
+        </div>
+
+        <MButton Icon="true"
+                 OnClick="@(() => GoWeekAsync(1))">
+            <MIcon>
+                chevron_right
+            </MIcon>
+        </MButton>
+
+        <MultiSizeMenu @bind-Visible="showMenu"
+                       DynamicListItems="menuItems">
+            <ActivatorContent>
+                <MButton @attributes="@context.Attrs"
+                         Icon="true">
+                    <MultiSizeDisplay>
+                        <DesktopContent>
+                            <MIcon>more_horiz</MIcon>
+                        </DesktopContent>
+                        <MobileContent>
+                            <MIcon>more_vert</MIcon>
+                        </MobileContent>
+                    </MultiSizeDisplay>
+                </MButton>
+            </ActivatorContent>
+        </MultiSizeMenu>
+    </MyAppBar>
+
+    <ScrollContainer>
+        @*严格按方法文档 2 的章节顺序：2.1 → 2.6，一节不缺。每节都带上「这要填什么」。*@
+        <div class="review-form">
+            @if (review?.IsSkipped == true)
+            {
+                <div class="review-picked">
+                    @(I18n.T("This week is skipped - it will not count as owed in the stats. Writing anything here cancels the skip."))
+                </div>
+            }
+
+            @*补足过去的周课时先提醒一句：2.1 的清单和候选池都是从日课长出来的。*@
+            @if (blankWeek)
+            {
+                <div class="review-picked">
+                    @(I18n.T("No daily review was written for this week - the list below and the candidate pool both come from the daily reviews."))
+                </div>
+            }
+
+            @*需求 4：机器算数，人做判断。所以这里只列出这一周的失败，归类与判性都由人点。*@
+            @*2.1：先把这一周做完的事结掉。达成进成就列表，未达成写原因，环境原因归档到 7.4。
+               2026-10-06 起结算的是「本周」而不是「上周」——顺着下来，最后（2.6）才是定下一周。*@
+            <div class="review-section">
+                <div class="review-label">2.1 @weeklyTitles[0]</div>
+                <div class="review-desc">@WeekRange · @(I18n.T("Write the reason, not the regret."))</div>
+
+                @if (goals.Count == 0)
+                {
+                    <div class="review-desc">@(I18n.T("No goal was set for this week"))</div>
+                }
+                else
+                {
+                    @foreach (var goal in goals)
+                    {
+                        <div class="review-group">
+                            <div class="review-group-head">
+                                <span class="review-group-index">@DomainText(goal.Domain)</span>
+                            </div>
+                            <div class="review-desc">@goal.Content</div>
+
+                            @*完成 / 未达成二选一。达成会自动进 6.3 成就列表，这里不用再填任何东西。*@
+                            <MChipGroup Class="review-chip-group"
+                                        Multiple="true">
+                                <MChip Class="@ChipClass(goal.Status == GoalStatus.Done)"
+                                       Filter="true"
+                                       IsActive="goal.Status == GoalStatus.Done"
+                                       OnClick="@(() => SettleAsync(goal, GoalStatus.Done))">
+                                    @(I18n.T("Done"))
+                                </MChip>
+                                <MChip Class="@ChipClass(goal.Status == GoalStatus.Dropped)"
+                                       Filter="true"
+                                       IsActive="goal.Status == GoalStatus.Dropped"
+                                       OnClick="@(() => SettleAsync(goal, GoalStatus.Dropped))">
+                                    @(I18n.T("Not done"))
+                                </MChip>
+                            </MChipGroup>
+
+                            @*未达成才展开归因：哪几项 SMART 是原因、各自为什么。
+                               已结算的目标重进本页会原样回显，而且还能改——所以不另做只读态。*@
+                            @if (goal.Status == GoalStatus.Dropped)
+                            {
+                                @if (HasAnySmart(goal))
+                                {
+                                    <div class="review-subitem-label">@(I18n.T("Which SMART item is why it was not achieved? Check the ones that apply, then write the reason in the box that appears."))</div>
+
+                                    @for (int s = 0; s < SmartCount; s++)
+                                    {
+                                        int index = s;
+                                        <div class="review-subitem">
+                                            <MChipGroup Class="review-chip-group"
+                                                        Multiple="true">
+                                                <MChip Class="@ChipClass(IsIssueChecked(goal, index))"
+                                                       Filter="true"
+                                                       IsActive="IsIssueChecked(goal, index)"
+                                                       OnClick="@(() => ToggleIssue(goal, index))">
+                                                    @ReviewSectionText.WeeklySmartLetters[index] · @smartKeys[index]
+                                                </MChip>
+                                            </MChipGroup>
+                                            <div class="review-desc">@SmartTextOrDash(goal, index)</div>
+
+                                            @if (IsIssueChecked(goal, index))
+                                            {
+                                                <MTextarea Value="@Issue(index, goal)"
+                                                           ValueChanged="@((string? value) => SetIssueAndMark(goal, index, value))"
+                                                           Class="review-textarea"
+                                                           Rows="2">
+                                                </MTextarea>
+                                            }
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="review-desc">@(I18n.T("This goal was set without SMART notes, so there is nothing to attribute."))</div>
+                                }
+                            }
+                        </div>
+                    }
+                }
+
+                @*文书里明说：这一问和上面的打勾看的不是一回事——它量的是系统本身有没有在动*@
+                <div class="review-subitem-label">@(I18n.T("What happened differently this week because of this system?"))</div>
+                <div class="review-desc">@(I18n.T(ReviewSectionText.SettlementReflectionDescription))</div>
+                <MTextarea @bind-Value="sections.SettlementReflection"
+                           @bind-Value:after="MarkDirty"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">2.2 @(I18n.T("Count the micro failures"))</div>
+                <div class="review-desc">@(I18n.T("Do not reread the whole week. Just group this week's micro failures and count how often each kind showed up. Twice or more makes it a stumbling block."))</div>
+
+                @if (blocks.Count == 0)
+                {
+                    <EmptyResult Show="true"
+                                 Text="@I18n.T("No micro failure recorded this week")">
+                    </EmptyResult>
+                }
+                else
+                {
+                    <div class="review-picked">
+                        @foreach (var item in CategorySummary)
+                        {
+                            <span class="me-3">@item.Category ×@item.Count</span>
+                        }
+                    </div>
+
+                    @for (int b = 0; b < blocks.Count; b++)
+                    {
+                        int index = b;
+                        var view = blocks[index];
+                        <div class="review-group">
+                            <div class="review-group-head">
+                                <span class="review-group-index">
+                                    @(view.Date?.ToString("MM/dd") ?? "--") · @(index + 1)
+                                </span>
+                                @if (view.Date is not null)
+                                {
+                                    <MButton Icon="true"
+                                             Small="true"
+                                             OnClick="@(() => OpenSourceDiaryAsync(view))">
+                                        <MIcon>open_in_new</MIcon>
+                                    </MButton>
+                                }
+                            </div>
+
+                            <div class="review-desc">@view.Block.Description</div>
+
+                            <div class="review-subitem-label">@(I18n.T("Category"))</div>
+                            <MChipGroup Class="review-chip-group"
+                                        Multiple="true">
+                                @foreach (var category in knownCategories)
+                                {
+                                    bool isOn = string.Equals(view.Block.Category, category, StringComparison.CurrentCulture);
+                                    <MChip @key="category"
+                                           Class="@ChipClass(isOn)"
+                                           Filter="true"
+                                           IsActive="isOn"
+                                           OnClick="@(() => SetCategoryAsync(view.Block, category))">
+                                        @category
+                                    </MChip>
+                                }
+                                <MChip Class="review-chip"
+                                       IsActive="false"
+                                       OnClick="@(() => AskNewCategory(view.Block))">
+                                    <MIcon Left="true">add</MIcon>
+                                    @(I18n.T("New category"))
+                                </MChip>
+                            </MChipGroup>
+
+                            <div class="review-subitem-label">@(I18n.T("Verdict"))</div>
+                            <MChipGroup Class="review-chip-group"
+                                        Multiple="true">
+                                @foreach (var verdict in verdicts)
+                                {
+                                    <MChip @key="verdict"
+                                           Class="@ChipClass(view.Block.Verdict == verdict)"
+                                           Filter="true"
+                                           IsActive="view.Block.Verdict == verdict"
+                                           OnClick="@(() => ApplyJudgementAsync(view.Block, verdict, view.Block.Category))">
+                                        @VerdictText(verdict)
+                                    </MChip>
+                                }
+                            </MChipGroup>
+                        </div>
+                    }
+                }
+            </div>
+
+            @*2.3：一次只改一条。书里说「就不要把它塞得太满」*@
+            <div class="review-section">
+                <div class="review-label">2.3 @(I18n.T("Distill the micro failures"))</div>
+                <div class="review-desc">@(I18n.T("Pick one from the candidates and write it into one of the three goals below. One at a time, until it becomes automatic."))</div>
+
+                @*候选池要一眼看得清「有哪些、为什么是候选」。芯片横排会把长描述截掉，所以用竖列表。*@
+                @if (Candidates.Count == 0)
+                {
+                    <div class="review-desc">@(I18n.T("No candidate yet. Mark something as a stumbling block in 2.2 first."))</div>
+                }
+                else
+                {
+                    <div class="review-subitem-label">
+                        @($"{I18n.T("Candidate pool")} · {Candidates.Count}")
+                    </div>
+                    @foreach (var candidate in Candidates)
+                    {
+                        bool isOn = chosenBlock?.Id == candidate.View.Block.Id;
+                        <div @key="candidate.View.Block.Id"
+                             class="@CandidateRowClass(isOn)"
+                             @onclick="@(() => ToggleChosenBlock(candidate.View.Block))">
+                            <div class="review-group-index">
+                                <wc-auto-scroll-text>@CandidateLabel(candidate)</wc-auto-scroll-text>
+                            </div>
+                            <div class="review-desc">@candidate.View.Block.Description</div>
+                        </div>
+                    }
+
+                    <MButton Class="review-add"
+                             Disabled="chosenBlock is null"
+                             OnClick="PromoteChosenBlock">
+                        <MIcon Left="true">arrow_upward</MIcon>
+                        @(I18n.T("Turn it into a weekly goal"))
+                    </MButton>
+                }
+            </div>
+
+            @*（原 2.3 的「每周三个目标」已经搬到最后一节当 2.6「下周三个目标」了）*@
+
+            @*（原 2.4 的「上周三目标结算」已经搬到最前面当 2.1 了）*@
+
+            <div class="review-section">
+                <div class="review-label">2.4 @weeklyTitles[1]</div>
+                <div class="review-desc">@weeklyDescriptions[1]</div>
+
+                @*2.4 的出口问题要从这一周的日课里找答案，所以先把总览的入口放在最前面*@
+                <MButton Class="review-add"
+                         OnClick="OpenDailyOverviewAsync">
+                    <MIcon Left="true">menu_book</MIcon>
+                    @(I18n.T("View this week's daily reviews"))
+                </MButton>
+
+                @for (int e = 0; e < WeeklyReviewSections.ExitQuestionCount; e++)
+                {
+                    int index = e;
+                    <div class="review-subitem">
+                        <div class="review-subitem-label">@(index + 1). @exitQuestions[index]</div>
+                        <MTextarea @bind-Value="sections.Exits[index]"
+                                   @bind-Value:after="MarkDirty"
+                                   Class="review-textarea"
+                                   Rows="2">
+                        </MTextarea>
+                    </div>
+                }
+
+                @*问题之后是动作：把这一周看到的新东西直接归档到四张 List。
+                   内容是自由输入（判断由人做），重复内容沿用 ArchiveService 的去重规则。*@
+                <div class="review-subitem-label">@(I18n.T("Archive to the four lists"))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var item in archiveKinds)
+                    {
+                        <MChip @key="item"
+                               Class="@ChipClass(archiveKind == item)"
+                               Filter="true"
+                               IsActive="archiveKind == item"
+                               OnClick="@(() => { archiveKind = item; })">
+                            @ArchiveKindName(item)
+                        </MChip>
+                    }
+                </MChipGroup>
+                <div class="review-subitem">
+                    <MTextarea @bind-Value="archiveContent"
+                               Class="review-textarea"
+                               Rows="2"
+                               maxlength="200">
+                    </MTextarea>
+                </div>
+                <MButton Class="review-add"
+                         Disabled="@(archiveSaving || string.IsNullOrWhiteSpace(archiveContent))"
+                         OnClick="ArchiveContentAsync">
+                    <MIcon Left="true">archive</MIcon>
+                    @(I18n.T("Archive it"))
+                </MButton>
+                <MButton Class="review-add"
+                         OnClick="OpenArchiveAsync">
+                    <MIcon Left="true">inventory_2</MIcon>
+                    @(I18n.T("View the archive"))
+                </MButton>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">2.5 @weeklyTitles[2]</div>
+                <div class="review-desc">@weeklyDescriptions[2]</div>
+                <MTextarea @bind-Value="sections.NewThing"
+                           @bind-Value:after="MarkDirty"
+                           Class="review-textarea"
+                           Rows="3">
+                </MTextarea>
+            </div>
+
+            @*2.6：这一周周课的收尾——定下一周三个目标。目标挂到**下一周**的周课记录上，
+               所以这里显示下一周的区间，免得人以为是给这周定的。*@
+            <div class="review-section">
+                <div class="review-label">2.6 @(I18n.T("Next week's three goals"))</div>
+                <div class="review-desc">@NextWeekRange · @(I18n.T("One goal should be a realistic small step toward a macro direction. Each goal gets the SMART check."))</div>
+
+                @for (int g = 0; g < nextWeekGoals.Count; g++)
+                {
+                    int index = g;
+                    var goal = nextWeekGoals[index];
+                    <div class="review-group">
+                        <div class="review-group-head">
+                            <span class="review-group-index">@DomainText(goal.Domain) · @StatusText(goal.Status)</span>
+                            <MButton Icon="true"
+                                     Small="true"
+                                     OnClick="@(() => OpenGoalDialog(goal))">
+                                <MIcon>edit</MIcon>
+                            </MButton>
+                            <MButton Icon="true"
+                                     Small="true"
+                                     OnClick="@(() => AskDeleteGoal(goal))">
+                                <MIcon>close</MIcon>
+                            </MButton>
+                        </div>
+                        <div class="review-desc">@goal.Content</div>
+                    </div>
+                }
+
+                <MButton Class="review-add"
+                         OnClick="@(() => OpenGoalDialog(null))">
+                    <MIcon Left="true">add</MIcon>
+                    @(I18n.T("Add goal"))
+                </MButton>
+            </div>
+
+            @*节拍判定只认这一个开关。不点它，复盘主页会一直把这一周算成「已逾期」。*@
+            <div class="review-section">
+                @if (review?.IsFinalized == true)
+                {
+                    <div class="review-picked">
+                        @($"{I18n.T("Completed")} · {review.FinalizedTime:yyyy/MM/dd HH:mm}")
+                    </div>
+                }
+                <MButton Class="review-add"
+                         OnClick="FinishAsync">
+                    <MIcon Left="true">task_alt</MIcon>
+                    @(I18n.T("Finish this week's review"))
+                </MButton>
+            </div>
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="save"
+                   Show="true"
+                   OnClick="SaveFromButtonAsync">
+    </MyFloatButton>
+</div>
+
+<MultiSizeDatePicker @bind-Visible="showDatePicker"
+                     Value="@SelectedDate"
+                     ValueChanged="SwitchToDateAsync"
+                     Events="eventsDates"
+                     Max="@Today">
+</MultiSizeDatePicker>
+
+<WeeklyGoalEditDialog @bind-Visible="showGoalDialog"
+                      Value="editingGoal"
+                      WeeklyReviewId="@Guid.Empty"
+                      OnOK="SaveGoalAsync">
+</WeeklyGoalEditDialog>
+@*新目标的 WeeklyReviewId 由 SaveGoalAsync 落到「下一周」那行上（2.6），
+  所以这里刻意留空；编辑既有目标时对话框会保留它自己那份 Id。*@
+
+<InputDialog @bind-Visible="showNewCategory"
+             Title="@(I18n.T("New category"))"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MaxLength="20"
+             OnOK="AddCategoryAsync">
+</InputDialog>
+
+<DeleteDialog @bind-Visible="showDeleteGoal"
+              Title="@(I18n.T("Delete goal"))"
+              OnOK="ConfirmDeleteGoalAsync">
+</DeleteDialog>

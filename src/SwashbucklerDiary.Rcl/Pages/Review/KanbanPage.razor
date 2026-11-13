@@ -1,0 +1,204 @@
+@page "/"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<MyAppBar>
+    <MToolbarTitle Class="font-weight-bold flex-grow-1">
+        <wc-auto-scroll-text>@(I18n.T("Review"))</wc-auto-scroll-text>
+    </MToolbarTitle>
+</MyAppBar>
+
+<SwiperTabItems @ref="swiperTabItems"
+                @bind-Value="tab">
+    <SwiperTabItem>
+        <MContainer Class="my-container"
+                    Fluid="true">
+            @*需求 10：今日页顶部常驻，点一下 = 重复一次并计数*@
+            @if (affirmations.Count > 0)
+            {
+                <div class="kanban-affirmation-bar">
+                    @foreach (var item in affirmations)
+                    {
+                        <MButton @key="item.Id"
+                                 Class="kanban-affirmation-chip me-2"
+                                 Rounded="true"
+                                 OnClick="@(() => RepeatAffirmationAsync(item))">
+                            <span class="kanban-affirmation-text">@item.Content</span>
+                            <span class="ms-2 font-weight-bold">@item.RepeatCount</span>
+                        </MButton>
+                    }
+                </div>
+            }
+
+            <MCard Class="mb-4"
+                   Elevation="0"
+                   Rounded="@("lg")">
+                <MCardTitle Class="font-weight-bold">
+                    <wc-auto-scroll-text>@(I18n.T("What to do today"))</wc-auto-scroll-text>
+                </MCardTitle>
+                <MList Class="py-0">
+                    @foreach (var task in tasks)
+                    {
+                        <MListItem @key="task.Kind"
+                                   OnClick="@(() => OpenTask(task))">
+                            <MListItemIcon>
+                                <MIcon>@TaskIcon(task)</MIcon>
+                            </MListItemIcon>
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@(I18n.T(TaskTitleKey(task.Kind)))</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                <MListItemSubtitle>
+                                    <wc-auto-scroll-text>@TaskSubtitle(task)</wc-auto-scroll-text>
+                                </MListItemSubtitle>
+                            </MListItemContent>
+                            @if (task.State != ReviewTaskState.Done)
+                            {
+                                <MListItemAction>
+                                    <MIcon>chevron_right</MIcon>
+                                </MListItemAction>
+                            }
+                        </MListItem>
+                    }
+                </MList>
+            </MCard>
+
+            @*文档 5：状态管理表不是节拍的一部分，是「状态糟糕时随时可记」。
+              所以给一个常驻的随手入口，而不是等它出现在「今天该做什么」里。
+              进的是新记录的表单——状态差的那一刻不该先让人挑一条历史。*@
+            <MCard Class="mb-4"
+                   Elevation="0"
+                   Rounded="@("lg")">
+                <MList Class="py-0">
+                    <MListItem OnClick="@(() => To("stateRecord"))">
+                        <MListItemIcon>
+                            <MIcon>psychology</MIcon>
+                        </MListItemIcon>
+                        <MListItemContent>
+                            <MListItemTitle>
+                                <wc-auto-scroll-text>@(I18n.T("Log how you feel right now"))</wc-auto-scroll-text>
+                            </MListItemTitle>
+                            <MListItemSubtitle>
+                                <wc-auto-scroll-text>@(I18n.T(StateRecordText.QuickEntrySubtitle))</wc-auto-scroll-text>
+                            </MListItemSubtitle>
+                        </MListItemContent>
+                        <MListItemAction>
+                            <MIcon>chevron_right</MIcon>
+                        </MListItemAction>
+                    </MListItem>
+                </MList>
+            </MCard>
+
+            @*人物课题：不是节拍的一部分，想起来就记。先问「和谁」，再进写作页——
+              人物和课题各打一个标签，写作页只负责预填正文，不碰库表。*@
+            <MCard Class="mb-4"
+                   Elevation="0"
+                   Rounded="@("lg")">
+                <MList Class="py-0">
+                    <MListItem OnClick="@(() => To("lesson"))">
+                        <MListItemIcon>
+                            <MIcon>school</MIcon>
+                        </MListItemIcon>
+                        <MListItemContent>
+                            <MListItemTitle>
+                                <wc-auto-scroll-text>@(I18n.T("Log a lesson"))</wc-auto-scroll-text>
+                            </MListItemTitle>
+                            <MListItemSubtitle>
+                                <wc-auto-scroll-text>@(I18n.T("What you learned from someone"))</wc-auto-scroll-text>
+                            </MListItemSubtitle>
+                        </MListItemContent>
+                        <MListItemAction>
+                            <MIcon>chevron_right</MIcon>
+                        </MListItemAction>
+                    </MListItem>
+                </MList>
+            </MCard>
+
+            @*需求 12 + 文档 5.2：同类触因攒够 3 个就该交给月课 3.1 做三列审视*@
+            @if (readyTriggers.Count > 0)
+            {
+                <MCard Class="mb-4"
+                       Elevation="0"
+                       Rounded="@("lg")">
+                    <MCardTitle Class="font-weight-bold">
+                        <wc-auto-scroll-text>@(I18n.T("Triggers ready for the monthly review"))</wc-auto-scroll-text>
+                    </MCardTitle>
+                    <MList Class="py-0">
+                        @foreach (var item in readyTriggers)
+                        {
+                            <MListItem @key="item.Tag.Id"
+                                       OnClick="OpenTriggers">
+                                <MListItemIcon>
+                                    <MIcon>bolt</MIcon>
+                                </MListItemIcon>
+                                <MListItemContent>
+                                    <MListItemTitle>
+                                        <wc-auto-scroll-text>@item.Tag.Name</wc-auto-scroll-text>
+                                    </MListItemTitle>
+                                    <MListItemSubtitle>
+                                        <wc-auto-scroll-text>@($"{item.Count} × · {I18n.T("Hand it to the monthly review 3.1")}")</wc-auto-scroll-text>
+                                    </MListItemSubtitle>
+                                </MListItemContent>
+                                <MListItemAction>
+                                    <MIcon>chevron_right</MIcon>
+                                </MListItemAction>
+                            </MListItem>
+                        }
+                    </MList>
+                </MCard>
+            }
+
+            @*文档 7.4 的出口：同一条归档累计 3 次，说明它不是偶发，该回到 2.1 重新进候选池*@
+            @if (feedbackCandidates.Count > 0)
+            {
+                <MCard Class="mb-4"
+                       Elevation="0"
+                       Rounded="@("lg")">
+                    <MCardTitle Class="font-weight-bold">
+                        <wc-auto-scroll-text>@(I18n.T("Micro failures ready to feed back"))</wc-auto-scroll-text>
+                    </MCardTitle>
+                    <MList Class="py-0">
+                        @foreach (var item in feedbackCandidates)
+                        {
+                            <MListItem @key="item.Id"
+                                       OnClick="OpenArchiveMicroFailures">
+                                <MListItemIcon>
+                                    <MIcon>replay</MIcon>
+                                </MListItemIcon>
+                                <MListItemContent>
+                                    <MListItemTitle>
+                                        <wc-auto-scroll-text>@item.Content</wc-auto-scroll-text>
+                                    </MListItemTitle>
+                                    <MListItemSubtitle>
+                                        <wc-auto-scroll-text>@($"{item.OccurrenceCount} × · {I18n.T("Back into this week's 2.2")}")</wc-auto-scroll-text>
+                                    </MListItemSubtitle>
+                                </MListItemContent>
+                                <MListItemAction>
+                                    <MIcon>chevron_right</MIcon>
+                                </MListItemAction>
+                            </MListItem>
+                        }
+                    </MList>
+                </MCard>
+            }
+        </MContainer>
+    </SwiperTabItem>
+
+    <SwiperTabItem>
+        <MContainer Class="my-container"
+                    Fluid="true">
+            <EmptyResult Show="true"
+                         Text="@I18n.T("Review kanban is coming soon")">
+            </EmptyResult>
+        </MContainer>
+    </SwiperTabItem>
+
+    <SwiperTabItem>
+        <MContainer Class="my-container"
+                    Fluid="true">
+            <EmptyResult Show="true"
+                         Text="@I18n.T("Review kanban is coming soon")">
+            </EmptyResult>
+        </MContainer>
+    </SwiperTabItem>
+</SwiperTabItems>

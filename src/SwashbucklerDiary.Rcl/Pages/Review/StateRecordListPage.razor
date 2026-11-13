@@ -1,0 +1,72 @@
+@page "/stateRecords"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@(I18n.T("State record"))"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            <div class="review-desc">@(I18n.T(StateRecordText.ListDescription))</div>
+
+            @if (records.Count == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("No state records yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var view in records)
+                    {
+                        var text = TextOf(view);
+                        <MListItem @key="view.Record.Id"
+                                   Class="px-0"
+                                   OnClick="@(() => To($"stateRecord?Id={view.Record.Id}"))">
+                            <MListItemIcon>
+                                <MIcon>@(view.Record.EmotionName is null ? "sms_failed" : "psychology")</MIcon>
+                            </MListItemIcon>
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@text.Title</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                <MListItemSubtitle>
+                                    <wc-auto-scroll-text>@text.Subtitle</wc-auto-scroll-text>
+                                </MListItemSubtitle>
+                            </MListItemContent>
+                            @*整行可点会打开表单，所以右侧这块要把点击拦下来——
+                              照 DiaryCard / TagCard 的写法把 stopPropagation 挂在 MListItemAction 上*@
+                            <MListItemAction @onclick:stopPropagation="true">
+                                @*「记一次」留下的半成品在这里一眼看得出来，点进去补全即可*@
+                                @if (view.Record.IsTriggerOnly())
+                                {
+                                    <span class="review-group-index">@I18n.T("To complete")</span>
+                                }
+                                <MButton Icon="true"
+                                         OnClick="@(() => AskDeleteAsync(view))">
+                                    <MIcon>close</MIcon>
+                                </MButton>
+                            </MListItemAction>
+                        </MListItem>
+                    }
+                </MList>
+            }
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="add"
+                   Show="true"
+                   OnClick="@(() => To("stateRecord"))">
+    </MyFloatButton>
+</div>
+
+<DeleteDialog @bind-Visible="showDelete"
+              Title="@(I18n.T("Delete state record"))"
+              Content="@(I18n.T("Delete this state record?"))"
+              OnOK="ConfirmDeleteAsync">
+</DeleteDialog>

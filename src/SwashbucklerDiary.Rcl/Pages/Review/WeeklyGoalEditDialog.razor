@@ -1,0 +1,90 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits DialogComponentBase
+
+<CustomMDialog MyValue="Visible"
+               MyValueChanged="InternalVisibleChanged"
+               ContentClass="rounded-lg"
+               MaxWidth="520"
+               DisableAutoFocus
+               OnBeforeShowContent="HandleOnBeforeShowContent">
+    <MCard>
+        <MCardTitle Class="font-weight-bold flex-nowrap">
+            <wc-auto-scroll-text>@(I18n.T("Weekly goal"))</wc-auto-scroll-text>
+            <MSpacer></MSpacer>
+            <MButton Icon
+                     OnClick="HandleOnCancel">
+                <MIcon>close</MIcon>
+            </MButton>
+        </MCardTitle>
+        <MCardText Class="pb-0">
+            <div class="weekly-goal-form">
+                <div class="review-label">@(I18n.T("Domain"))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var item in domains)
+                    {
+                        <MChip @key="item"
+                               Class="@ChipClass(goal.Domain == item)"
+                               Filter="true"
+                               IsActive="goal.Domain == item"
+                               OnClick="@(() => goal.Domain = item)">
+                            @DomainText(item)
+                        </MChip>
+                    }
+                </MChipGroup>
+
+                <div class="review-label">@(I18n.T("Goal"))</div>
+                <MTextarea @bind-Value="goal.Content"
+                           Class="review-textarea"
+                           Rows="2">
+                </MTextarea>
+
+                @*SMART 的 R 就是对着第 0 节的宏观方向答的，所以这里能挂上一条*@
+                <div class="review-label">@(I18n.T("Macro goal"))</div>
+                @if (macroGoals.Count == 0)
+                {
+                    <div class="review-desc">@(I18n.T("No macro goal yet. You can add the three directions later."))</div>
+                }
+                else
+                {
+                    <MChipGroup Class="review-chip-group"
+                                Multiple="true">
+                        @foreach (var item in macroGoals)
+                        {
+                            bool isOn = goal.MacroGoalId == item.Id;
+                            <MChip @key="item.Id"
+                                   Class="@ChipClass(isOn)"
+                                   Filter="true"
+                                   IsActive="isOn"
+                                   OnClick="@(() => ToggleMacroGoal(item.Id))">
+                                @item.Title
+                            </MChip>
+                        }
+                    </MChipGroup>
+                }
+
+                @for (int i = 0; i < SmartKeys.Length; i++)
+                {
+                    int index = i;
+                    <div class="review-label">@($"{ReviewSectionText.WeeklySmartLetters[index]} · {I18n.T(SmartKeys[index])}")</div>
+                    <MTextarea @bind-Value="smartValues[index]"
+                               Class="review-textarea"
+                               Rows="2">
+                    </MTextarea>
+                }
+            </div>
+        </MCardText>
+        <MCardActions Class="pt-0">
+            <MSpacer></MSpacer>
+            <MButton Text
+                     OnClick="HandleOnCancel">
+                @(I18n.T("Cancel"))
+            </MButton>
+            <MButton Text
+                     Color="primary"
+                     OnClick="HandleOnOK">
+                @(I18n.T("Save"))
+            </MButton>
+        </MCardActions>
+    </MCard>
+</CustomMDialog>
