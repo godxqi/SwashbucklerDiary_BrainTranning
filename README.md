@@ -1,4 +1,4 @@
-<h1 align="center">侠客日记</h1>
+<h1 align="center">侠客日记_大脑训练手册适配版</h1>
 
 <div align="center">
 
@@ -6,7 +6,10 @@
 
 「 侠客日记 」是一个开源、跨平台的本地日记APP。
 
-不是所有日记都叫流水账，这本是侠客的秘籍！记录生活点滴，书写你的江湖传说。
+「 侠客日记_大脑训练手册适配版 」是从「 侠客日记 」上按照塔拉·斯瓦特的<大脑训练手册>改造后的版本。
+我认为虽然记日记是一个很好的习惯, 但是我们没有明确为什么要记日记, 日记需要关注哪些点, 学习了<大脑训练手册后>我将开源日记本「 侠客日记 」进行了改造, 一切按照书中的方式去制作笔记.
+(没有看过这本书的, 强烈推荐去阅读一下, 虽然名字很糙, 但是给人启发很大)
+
 
 ![GitHub Repo size](https://img.shields.io/github/repo-size/Yu-Core/SwashbucklerDiary?style=flat-square&color=FF5722)
 [![GitHub license](https://img.shields.io/github/license/Yu-Core/SwashbucklerDiary?style=flat-square)](LICENSE)
@@ -19,29 +22,16 @@
 </div>
 
 ## 🔗 在线预览
-[在线演示地址（GitHub Pages）](https://yu-core.github.io/SwashbucklerDiary/)
+[侠客日记 在线演示地址（GitHub Pages）](https://yu-core.github.io/SwashbucklerDiary/)
+[侠客日记_大脑训练手册版 在线演示地址（GitHub Pages）](404)
 
 ## 🛠️ 主要技术栈
-- [Blazor Hybrid](https://learn.microsoft.com/aspnet/core/blazor/hybrid/)
-- [Blazor Server](https://learn.microsoft.com/aspnet/core/blazor/hosting-models#blazor-server)
-- [Blazor WebAssembly](https://learn.microsoft.com/aspnet/core/blazor/hosting-models#blazor-webassembly)
-- [Gir.Core](https://gircore.github.io/)
-- [Masa Blazor](https://docs.masastack.com/blazor/introduction/why-masa-blazor)
-- [MAUI](https://learn.microsoft.com/dotnet/maui/)
-- [Serilog](https://serilog.net/)
-- [SqlSugar](https://www.donet5.com/Home/Doc) 
-- [Vditor](https://b3log.org/vditor/) 
+- [Blazor Hybrid](https://github.com/Yu-Core/SwashbucklerDiary)
+- [Claude Code](https://claude.com)
+- [DeepSeek](https://deepseek.com)
 
 ## 🚀 下载渠道
-- [![Microsoft 应用商店](https://get.microsoft.com/images/zh-cn%20dark.svg)](https://apps.microsoft.com/store/detail/9P6PBVBF466L?launch=true&mode=full)
-- [GitHub 发行版](https://github.com/Yu-Core/SwashbucklerDiary/releases)
-- [123云盘](https://www.123912.com/s/eVjxjv-IfnX)
-- [中国移动云盘](https://yun.139.com/shareweb/#/w/i/2u8omYzvLhqdo) (提取码:3dgn)
-- [百度手机助手](https://shouji.baidu.com/detail/5000042660?source=appbaidu)
-- [豌豆荚](https://www.wandoujia.com/apps/8369224)
-- [酷安](https://www.coolapk.com/apk/937401)
-- [应用宝](https://sj.qq.com/appdetail/com.yucore.swashbucklerdiary)
-- [华为应用市场](https://appgallery.huawei.com/app/C107898911)
+- 这个仓库
 
 ## ⬇️ [下载指南](./doc/download-guide.md)
 详见 [./download-guide.md](./download-guide.md) 
@@ -88,26 +78,12 @@
 ## 🖥 支持的平台
 - Windows (Windows 11和Windows 10版本 1809 或更高版本)
 - Android (Android 8.0 (API 26) 或更高版本)
-- ~~iOS (iOS 14 或更高版本) (虚拟机可运行，物理机未经测试)~~
-- macOS (macOS 12 或更高版本)
-- Web
-- Linux
 
 ## 🌏️ 支持的语言
 | 代码    | 语言             | 查看                                                             |
 | ------- | ---------------- | ---------------------------------------------------------------- |
-| ar-EG   | 阿拉伯语（埃及）   | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ar-EG.json)      |
-| de-DE   | 德语             | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/de-DE.json)      |
 | en-US   | 英语（美国）       | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/en-US.json)      |
-| es-ES   | 西班牙语（西班牙） | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/es-ES.json)      |
-| fr-FR   | 法语（法国）       | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/fr-FR.json)      |
-| ja-JP   | 日语             | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ja-JP.json)      |
-| ko-KR   | 朝鲜语/韩语        | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ko-KR.json)      |
-| pt-BR   | 葡萄牙语（巴西）   | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/pt-BR.json)      |
-| ru-RU   | 俄语              | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ru-RU.json)      |
-| vi-VN   | 越南语            | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/vi-VN.json)      |
 | zh-CN   | 中文（简体）       | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/zh-CN.json)      |
-| zh-TW   | 中文（繁体）       | [查看](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/zh-TW.json)      |
 
 ## ⌨️ 开发环境
 [Visual Studio 2026](https://learn.microsoft.com/visualstudio/install/install-visual-studio?view=visualstudio)
@@ -142,40 +118,9 @@
 详见 [./directory-structure.md](./directory-structure.md)  
 
 ## 🙏 感谢以下开源项目
-- [.NET MAUI](https://github.com/dotnet/maui)
-- [ASP.NET Core](https://github.com/dotnet/aspnetcore)
-- [betterSearch](https://github.com/jayZOU/betterSearch)
-- [Blazored LocalStorage](https://github.com/Blazored/LocalStorage)
-- [AspNetCore.Components.WebView.Gtk](https://github.com/Yu-Core/AspNetCore.Components.WebView.Gtk)
-- [Brotli](https://github.com/google/brotli)
-- [ClosedXML](https://github.com/ClosedXML/ClosedXML)
-- [CommunityToolkit.Maui](https://github.com/CommunityToolkit/Maui)
-- [dotnet-packaging](https://github.com/quamotion/dotnet-packaging)
-- [EmbedIO](https://github.com/unosquare/embedio)
-- [Fly Gesture Unlock](https://github.com/feiafei27/fly-gesture-unlock)
-- [Gir.Core](https://github.com/gircore/gir.core)
-- [Markdown Guide](https://github.com/mattcone/markdown-guide)
-- [MASA.Blazor](https://github.com/BlazorComponent/MASA.Blazor)
-- [MauiBlazorToolkit](https://github.com/Yu-Core/MauiBlazorToolkit)
-- [maui-linux](https://github.com/MauiGtk/maui-linux)
-- [Microsoft.Data.Sqlite](https://github.com/dotnet/efcore#microsoftdatasqlite)
-- [panzoom](https://github.com/anvaka/panzoom)
-- [Plugin.Maui.Biometric](https://github.com/FreakyAli/Plugin.Maui.Biometric)
-- [Raycoon.Serilog.Sinks.SQLite](https://github.com/RAYCOON/Serilog.Sinks.SQLite)
-- [Serilog](https://github.com/serilog/serilog)
-- [Serilog.Enrichers.Thread](https://github.com/serilog/serilog-enrichers-thread)
-- [Serilog.Extensions.Logging](https://github.com/serilog/serilog-extensions-logging)
-- [Serilog.Sinks.Debug](https://github.com/serilog/serilog-sinks-debug)
-- [snapdom](https://github.com/zumerlab/snapdom)
-- [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw)
-- [SqlSugar](https://github.com/DotNetNext/SqlSugar)
-- [Swiper](https://github.com/nolimits4web/swiper)
-- [Taglib-sharp](https://github.com/mono/taglib-sharp)
-- [WebDavClient](https://github.com/skazantsev/WebDavClient)
-- [wc-waterfall](https://github.com/huodoushigemi/wc-flow-layout)
-- [Vditor](https://github.com/Vanessa219/vditor)
+- [SwashbucklerDiary](https://github.com/Yu-Core/SwashbucklerDiary)
 
 ## ☕捐助
-项目的发展离不开你的支持，请作者喝杯咖啡吧☕
+项目的发展离不开你的支持，请「 侠客日记 」作者喝杯咖啡吧☕
 
 <img src="./res/sponsor/sponsor.png" width=300>

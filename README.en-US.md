@@ -1,4 +1,4 @@
-<h1 align="center">Swashbuckler Diary</h1>
+<h1 align="center">Swashbuckler Diary - Brain Training Manual Edition</h1>
 
 <div align="center">
 
@@ -6,7 +6,9 @@ English | [简体中文](./README.md)
 
 "Swashbuckler Diary" is an open source, cross platform local diary application.
 
-Not all diaries are called daily records. This is a secret book of a swashbuckler! Record the details of your life and write your legend in the Jianghu.
+"Swashbuckler Diary - Brain Training Manual Edition" is a modified version of "Swashbuckler Diary" based on <Source: open your mind, change your life> by Tara Swart.
+I think that although keeping a diary is a great habit, we never really clarify why we keep one or what a diary should focus on. After reading <Source: open your mind, change your life>, I modified the open source diary app "Swashbuckler Diary", building every note the way the book describes.
+(If you haven't read the book, I strongly recommend it. The title is plain, but it is very inspiring.)
 
 ![GitHub Repo size](https://img.shields.io/github/repo-size/Yu-Core/SwashbucklerDiary?style=flat-square&color=FF5722)
 [![GitHub license](https://img.shields.io/github/license/Yu-Core/SwashbucklerDiary?style=flat-square)](LICENSE)
@@ -18,30 +20,17 @@ Not all diaries are called daily records. This is a secret book of a swashbuckle
 
 </div>
 
-## 🌏️ Online preview
-[Live Demo（GitHub Pages）](https://yu-core.github.io/SwashbucklerDiary/)
+## 🔗 Online preview
+[Swashbuckler Diary Live Demo（GitHub Pages）](https://yu-core.github.io/SwashbucklerDiary/)
+[Swashbuckler Diary - Brain Training Manual Edition Live Demo（GitHub Pages）](404)
 
 ## 🛠️ Main Technology Stack
-- [Blazor Hybrid](https://learn.microsoft.com/aspnet/core/blazor/hybrid/)
-- [Blazor Server](https://learn.microsoft.com/aspnet/core/blazor/hosting-models#blazor-server)
-- [Blazor WebAssembly](https://learn.microsoft.com/aspnet/core/blazor/hosting-models#blazor-webassembly)
-- [Gir.Core](https://gircore.github.io/)
-- [Masa Blazor](https://docs.masastack.com/blazor/introduction/why-masa-blazor) 
-- [MAUI](https://learn.microsoft.com/dotnet/maui/)
-- [Serilog](https://serilog.net/)
-- [SqlSugar](https://www.donet5.com/Home/Doc) 
-- [Vditor](https://b3log.org/vditor/) 
+- [Blazor Hybrid](https://github.com/Yu-Core/SwashbucklerDiary)
+- [Claude Code](https://claude.com)
+- [DeepSeek](https://deepseek.com)
 
 ## 🚀 Download Channels
-- [![Microsoft Store](https://get.microsoft.com/images/en-us%20dark.svg)](https://apps.microsoft.com/store/detail/9P6PBVBF466L?launch=true&mode=full)
-- [GitHub Releases](https://github.com/Yu-Core/SwashbucklerDiary/releases)
-- [123pan](https://www.123912.com/s/eVjxjv-IfnX)
-- [China Mobile Cloud Disk](https://yun.139.com/shareweb/#/w/i/2u8omYzvLhqdo) (Extraction code: 3dgn)
-- [Baidu Mobile Assistant](https://shouji.baidu.com/detail/5000042660?source=appbaidu)
-- [Wandoujia](https://www.wandoujia.com/apps/8369224)
-- [CoolApk](https://www.coolapk.com/apk/937401)
-- [Tencent App Store](https://sj.qq.com/appdetail/com.yucore.swashbucklerdiary)
-- [HUAWEI AppGallery](https://appgallery.huawei.com/app/C107898911)
+- This repository
 
 ## ⬇️ [Download Guide](./doc/download-guide.md)
 See details [./download-guide.md](./download-guide.md) 
@@ -88,26 +77,12 @@ See details [./download-guide.md](./download-guide.md)
 ## 🖥 Supported Platforms
 - Windows (Windows 11 and Windows 10 version 1809 or higher)
 - Android (Android 8.0 (API 26) or higher)
-- ~~iOS (iOS 14 or higher) (Virtual machine can run, physical machine has not been tested)~~
-- macOS (macOS 12 or higher)
-- Web
-- Linux
 
 ## 🌏️ Supported Languages
 | Code  | Language               | View                                                             |
 | ----- | ---------------------- | ---------------------------------------------------------------- |
-| ar-EG | Arabic (Egypt)         | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ar-EG.json)      |
-| de-DE | German                 | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/de-DE.json)      |
 | en-US | English (United States)| [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/en-US.json)      |
-| es-ES | Spanish (Spain)        | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/es-ES.json)      |
-| fr-FR | French (France)        | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/fr-FR.json)      |
-| ja-JP | Japanese               | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ja-JP.json)      |
-| ko-KR | Korean                 | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ko-KR.json)      |
-| pt-BR | Portuguese (Brazil)    | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/pt-BR.json)      |
-| ru-RU | Russian                | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/ru-RU.json)      |
-| vi-VN | Vietnamese             | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/vi-VN.json)      |
 | zh-CN | Chinese (Simplified)   | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/zh-CN.json)      |
-| zh-TW | Chinese (Traditional)  | [View](./src/SwashbucklerDiary.Rcl/wwwroot/i18n/zh-TW.json)      |
 
 ## ⌨️ Development Environment
 [Visual Studio 2026](https://learn.microsoft.com/visualstudio/install/install-visual-studio?view=visualstudio)
@@ -142,40 +117,9 @@ See details [./download-guide.md](./download-guide.md)
 See details [./directory-structure.md](./directory-structure.md)  
 
 ## 🙏 Thanks to the following Open Source Projects
-- [.NET MAUI](https://github.com/dotnet/maui)
-- [ASP.NET Core](https://github.com/dotnet/aspnetcore)
-- [betterSearch](https://github.com/jayZOU/betterSearch)
-- [Blazored LocalStorage](https://github.com/Blazored/LocalStorage)
-- [AspNetCore.Components.WebView.Gtk](https://github.com/Yu-Core/AspNetCore.Components.WebView.Gtk)
-- [Brotli](https://github.com/google/brotli)
-- [ClosedXML](https://github.com/ClosedXML/ClosedXML)
-- [CommunityToolkit.Maui](https://github.com/CommunityToolkit/Maui)
-- [dotnet-packaging](https://github.com/quamotion/dotnet-packaging)
-- [EmbedIO](https://github.com/unosquare/embedio)
-- [Fly Gesture Unlock](https://github.com/feiafei27/fly-gesture-unlock)
-- [Gir.Core](https://github.com/gircore/gir.core)
-- [Markdown Guide](https://github.com/mattcone/markdown-guide)
-- [MASA.Blazor](https://github.com/BlazorComponent/MASA.Blazor)
-- [MauiBlazorToolkit](https://github.com/Yu-Core/MauiBlazorToolkit)
-- [maui-linux](https://github.com/MauiGtk/maui-linux)
-- [Microsoft.Data.Sqlite](https://github.com/dotnet/efcore#microsoftdatasqlite)
-- [panzoom](https://github.com/anvaka/panzoom)
-- [Plugin.Maui.Biometric](https://github.com/FreakyAli/Plugin.Maui.Biometric)
-- [Raycoon.Serilog.Sinks.SQLite](https://github.com/RAYCOON/Serilog.Sinks.SQLite)
-- [Serilog](https://github.com/serilog/serilog)
-- [Serilog.Enrichers.Thread](https://github.com/serilog/serilog-enrichers-thread)
-- [Serilog.Extensions.Logging](https://github.com/serilog/serilog-extensions-logging)
-- [Serilog.Sinks.Debug](https://github.com/serilog/serilog-sinks-debug)
-- [snapdom](https://github.com/zumerlab/snapdom)
-- [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw)
-- [SqlSugar](https://github.com/DotNetNext/SqlSugar)
-- [Swiper](https://github.com/nolimits4web/swiper)
-- [Taglib-sharp](https://github.com/mono/taglib-sharp)
-- [WebDavClient](https://github.com/skazantsev/WebDavClient)
-- [wc-waterfall](https://github.com/huodoushigemi/wc-flow-layout)
-- [Vditor](https://github.com/Vanessa219/vditor)
+- [SwashbucklerDiary](https://github.com/Yu-Core/SwashbucklerDiary)
 
 ## ☕Sponsor
-The development of the project cannot do without your support. Please have a cup of coffee with the developers☕
+The development of the project cannot do without your support. Please have a cup of coffee with the author of "Swashbuckler Diary"☕
 
 <img src="./res/sponsor/sponsor.png" width=300>
