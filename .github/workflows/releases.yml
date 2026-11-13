@@ -52,7 +52,7 @@ jobs:
           # - { os: ios, arch: arm64, runner: macos-15, ext: ipa, glob: '*.ipa' }
           # - { os: maccatalyst, arch: arm64, runner: macos-15, ext: pkg, glob: '*.pkg' }
           # - { os: maccatalyst, arch: x64, runner: macos-15, ext: pkg, glob: '*.pkg' }
-          - { os: windows, arch: x64, runner: windows-latest, ext: msix, packaged: true }
+          # - { os: windows, arch: x64, runner: windows-latest, ext: msix, packaged: true }
           - { os: windows, arch: x64, runner: windows-latest, ext: zip, packaged: false }
 
     runs-on: ${{ matrix.runner }}
@@ -210,7 +210,7 @@ jobs:
         if: matrix.os == 'windows' && matrix.packaged == true
         shell: bash
         run: |
-          file=$(find "${{ env.MAUI_CSPROJ_PATH }}/bin/Release/net${{ env.DOTNET_VERSION }}-windows10.0.19041.0/win-x64/AppPackages" -name "*.msix" -type f | head -1)
+          file=$(find "${{ env.MAUI_CSPROJ_PATH }}/AppPackages" -name "*.msix" -type f | head -1)
           mv "$file" "${{ env.ARTIFACT_PATH }}/${{ env.APP_NAME }}-${{ needs.prepare.outputs.displayVersion }}-${{ matrix.os }}-${{ matrix.arch }}.msix"
    
       # Upload Artifact
