@@ -29,6 +29,12 @@ namespace SwashbucklerDiary.Rcl.Services
 
         private readonly IReviewRepository<StateRecordModel> _stateRecordRepository;
 
+        private readonly IReviewRepository<LessonModel> _lessonRepository;
+
+        private readonly IReviewRepository<LessonTypeLinkModel> _lessonTypeRepository;
+
+        private readonly IReviewRepository<DailyEventModel> _dailyEventRepository;
+
         public ReviewExportService(
             IReviewRepository<DailyReviewModel> dailyRepository,
             IReviewRepository<WeeklyReviewModel> weeklyRepository,
@@ -41,7 +47,10 @@ namespace SwashbucklerDiary.Rcl.Services
             IReviewRepository<SelfAffirmationModel> affirmationRepository,
             IReviewRepository<ArchiveItemModel> archiveItemRepository,
             IReviewRepository<MacroGoalModel> macroGoalRepository,
-            IReviewRepository<StateRecordModel> stateRecordRepository)
+            IReviewRepository<StateRecordModel> stateRecordRepository,
+            IReviewRepository<LessonModel> lessonRepository,
+            IReviewRepository<LessonTypeLinkModel> lessonTypeRepository,
+            IReviewRepository<DailyEventModel> dailyEventRepository)
         {
             _dailyRepository = dailyRepository;
             _weeklyRepository = weeklyRepository;
@@ -55,6 +64,9 @@ namespace SwashbucklerDiary.Rcl.Services
             _archiveItemRepository = archiveItemRepository;
             _macroGoalRepository = macroGoalRepository;
             _stateRecordRepository = stateRecordRepository;
+            _lessonRepository = lessonRepository;
+            _lessonTypeRepository = lessonTypeRepository;
+            _dailyEventRepository = dailyEventRepository;
         }
 
         public async Task<ReviewExportModel> ExportAsync()
@@ -73,6 +85,9 @@ namespace SwashbucklerDiary.Rcl.Services
                 ArchiveItems = await LoadAsync(_archiveItemRepository).ConfigureAwait(false),
                 MacroGoals = await LoadAsync(_macroGoalRepository).ConfigureAwait(false),
                 StateRecords = await LoadAsync(_stateRecordRepository).ConfigureAwait(false),
+                Lessons = await LoadAsync(_lessonRepository).ConfigureAwait(false),
+                LessonTypeLinks = await LoadAsync(_lessonTypeRepository).ConfigureAwait(false),
+                DailyEvents = await LoadAsync(_dailyEventRepository).ConfigureAwait(false),
             };
         }
 
@@ -99,6 +114,9 @@ namespace SwashbucklerDiary.Rcl.Services
             await MergeAsync(_archiveItemRepository, model.ArchiveItems).ConfigureAwait(false);
             await MergeAsync(_macroGoalRepository, model.MacroGoals).ConfigureAwait(false);
             await MergeAsync(_stateRecordRepository, model.StateRecords).ConfigureAwait(false);
+            await MergeAsync(_lessonRepository, model.Lessons).ConfigureAwait(false);
+            await MergeAsync(_lessonTypeRepository, model.LessonTypeLinks).ConfigureAwait(false);
+            await MergeAsync(_dailyEventRepository, model.DailyEvents).ConfigureAwait(false);
         }
 
         private static async Task<List<T>> LoadAsync<T>(IReviewRepository<T> repository)

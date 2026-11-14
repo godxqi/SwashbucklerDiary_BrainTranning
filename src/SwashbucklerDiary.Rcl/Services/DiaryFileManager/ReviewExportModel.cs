@@ -6,11 +6,11 @@ namespace SwashbucklerDiary.Rcl.Services
     /// JSON 导出里的复盘部分，落到包内的 <c>review.json</c>。
     /// <para>
     /// 为什么需要它：<c>ExportJsonAsync</c> 只序列化 <see cref="DiaryModel"/>，
-    /// 12 张复盘表一条都不在导出里——用 JSON 换设备会把节拍、目标、归档、状态记录全丢光。
+    /// 复盘表一条都不在导出里——用 JSON 换设备会把节拍、目标、归档、状态记录、课题全丢光。
     /// 整库备份（<c>ExportDBAsync</c>）复制的是整个 .db3，所以天然没这个缺口，缺的只是可读导出。
     /// </para>
     /// <para>
-    /// <b>装的是全量，不是导出日记的子集。</b>这 12 张表是一张互相咬合的图
+    /// <b>装的是全量，不是导出日记的子集。</b>这些表是一张互相咬合的图
     /// （目标 → 周课 → 月课 → 肯定库 → 归档 → 状态记录），任何子集规则都会静默切断引用；
     /// 而多带几条数据的代价只是包大一点，少带几条的代价是换设备后回环断掉。
     /// </para>
@@ -50,6 +50,12 @@ namespace SwashbucklerDiary.Rcl.Services
 
         public List<StateRecordModel> StateRecords { get; set; } = [];
 
+        public List<LessonModel> Lessons { get; set; } = [];
+
+        public List<LessonTypeLinkModel> LessonTypeLinks { get; set; } = [];
+
+        public List<DailyEventModel> DailyEvents { get; set; } = [];
+
         /// <summary>一条复盘数据都没有——空包不值得写一个 review.json 出去。</summary>
         public bool IsEmpty => DailyReviews.Count == 0
             && WeeklyReviews.Count == 0
@@ -62,6 +68,9 @@ namespace SwashbucklerDiary.Rcl.Services
             && Affirmations.Count == 0
             && ArchiveItems.Count == 0
             && MacroGoals.Count == 0
-            && StateRecords.Count == 0;
+            && StateRecords.Count == 0
+            && Lessons.Count == 0
+            && LessonTypeLinks.Count == 0
+            && DailyEvents.Count == 0;
     }
 }

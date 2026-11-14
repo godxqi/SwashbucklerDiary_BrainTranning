@@ -13,6 +13,9 @@ namespace SwashbucklerDiary.Shared
 
         public Guid? SourceDiaryId { get; set; }
 
+        /// <summary>来自哪篇课题（课题存档的归档块）。空表示不是从课题来的。</summary>
+        public Guid? SourceLessonId { get; set; }
+
         /// <summary>
         /// 「这条是达成的成就」。<see cref="VirtueKind.Achievement"/> 就是它，所以语义上可推导。
         /// <para>

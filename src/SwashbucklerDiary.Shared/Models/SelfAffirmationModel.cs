@@ -22,6 +22,9 @@ namespace SwashbucklerDiary.Shared
         /// </summary>
         public Guid? SourceMonthlyReviewId { get; set; }
 
+        /// <summary>来自哪篇课题（课题存档的归档块）。空表示不是从课题来的。</summary>
+        public Guid? SourceLessonId { get; set; }
+
         /// <summary>用了几次。复盘主页顶部条点一下就 +1。</summary>
         public int RepeatCount { get; set; }
 

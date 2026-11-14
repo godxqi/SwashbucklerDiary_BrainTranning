@@ -13,8 +13,12 @@ namespace SwashbucklerDiary.Rcl.Pages
     /// 1.7 今天重复了哪一条自我肯定。一节都不缺，每节都写明这一格该填什么。
     /// <para>
     /// 1.3 固定三条、1.4 固定四问，都预留好分框。散文写回日记正文的章节里，
-    /// 芯片的产物写进正文末尾的受管区块，两者互不覆盖。正文本身仍是普通 Markdown，
-    /// 在「库表」里可以用完整编辑器打开改。
+    /// 芯片的产物写进正文末尾的受管区块，两者互不覆盖。
+    /// </para>
+    /// <para>
+    /// 例外是 1.1：它改成一件事一行，行存 <see cref="DailyEventModel"/> 副表，
+    /// 正文只是副表渲染出的可读副本。改 1.1 请回这个表单；在通用编辑器里改正文，
+    /// 下次保存日课会被副表覆盖。
     /// </para>
     /// </summary>
     public partial class DailyReviewPage : ImportantComponentBase
@@ -37,6 +41,11 @@ namespace SwashbucklerDiary.Rcl.Pages
         /// <summary>1.1 ~ 1.5 的散文。正文（DiaryModel.Content）是它的唯一真源。</summary>
         private DailyReviewSections sections = new();
 
+        /// <summary>1.1 的行：一行一件事，可挂一个人物标签。它是日课副表里的真源。</summary>
+        private List<DailyEventModel> lifeEvents = [];
+
+        private List<TagModel> personTags = [];
+
         private string[] dailyTitles = [];
 
         /// <summary>各节的「这要填什么」，取自方法文档对应章节。</summary>
@@ -56,6 +65,11 @@ namespace SwashbucklerDiary.Rcl.Pages
         private SelfAffirmationModel? pendingDeleteAffirmation;
 
         private bool showDatePicker;
+
+        private bool showAddPerson;
+
+        /// <summary>点「加人」时记下是哪一行，建完标签直接挂到那一行。</summary>
+        private int addPersonRowIndex = -1;
 
         private bool showDeleteDailyReview;
 
@@ -103,6 +117,12 @@ namespace SwashbucklerDiary.Rcl.Pages
 
         [Inject]
         private IReviewScheduleService ReviewScheduleService { get; set; } = default!;
+
+        [Inject]
+        private IDailyEventService DailyEventService { get; set; } = default!;
+
+        [Inject]
+        private ITagService TagService { get; set; } = default!;
 
         [SupplyParameterFromQuery]
         private DateOnly? Date { get; set; }
@@ -187,6 +207,24 @@ namespace SwashbucklerDiary.Rcl.Pages
                 ? new DailyReviewSections()
                 : DailyReviewSections.Parse(ReviewContentBlock.Strip(diary.Content));
 
+            personTags = (await TagService.QueryAsync())
+                .Where(it => it.Kind == TagKind.Person)
+                .ToList();
+            lifeEvents = review.Id == Guid.Empty
+                ? []
+                : await DailyEventService.QueryByReviewAsync(review.Id);
+
+            //旧数据只有一段 1.1 散文：整段当成一条无标签记录，等人来拆
+            if (lifeEvents.Count == 0 && !string.IsNullOrWhiteSpace(sections.Life))
+            {
+                lifeEvents.Add(new DailyEventModel { Content = sections.Life.Trim() });
+            }
+
+            if (lifeEvents.Count == 0)
+            {
+                lifeEvents.Add(new DailyEventModel());
+            }
+
             //结构化的行和那篇日记都不在，才是「这天还没写过」——
             //只看日记会误判：清空日课后日记还在，那不算空白。
             blankDay = diary is null && review.Id == Guid.Empty;
@@ -208,6 +246,94 @@ namespace SwashbucklerDiary.Rcl.Pages
         }
 
         /// <summary>再加一条微观失败。四问是针对一个失败的，一天可以有好几条。</summary>
+        private void AddLifeEvent()
+        {
+            lifeEvents.Add(new DailyEventModel());
+            dirty = true;
+        }
+
+        private void RemoveLifeEvent(int index)
+        {
+            if (lifeEvents.Count <= 1 || index < 0 || index >= lifeEvents.Count)
+            {
+                return;
+            }
+
+            lifeEvents.RemoveAt(index);
+            dirty = true;
+        }
+
+        private void AskAddPerson(int index)
+        {
+            addPersonRowIndex = index;
+            showAddPerson = true;
+        }
+
+        private async Task AddPersonAsync(string? name)
+        {
+            showAddPerson = false;
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return;
+            }
+
+            var tag = await TagService.GetOrCreatePersonAsync(name);
+            if (tag is null)
+            {
+                await AlertService.ErrorAsync(I18n.T("Add failed"));
+                return;
+            }
+
+            personTags = (await TagService.QueryAsync())
+                .Where(it => it.Kind == TagKind.Person)
+                .ToList();
+            if (!personTags.Any(it => it.Id == tag.Id))
+            {
+                personTags.Insert(0, tag);
+            }
+
+            if (addPersonRowIndex >= 0 && addPersonRowIndex < lifeEvents.Count)
+            {
+                lifeEvents[addPersonRowIndex].PersonTagId = tag.Id;
+            }
+
+            dirty = true;
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private void SelectLifePerson(int index, Guid personTagId)
+        {
+            if (index < 0 || index >= lifeEvents.Count)
+            {
+                return;
+            }
+
+            var row = lifeEvents[index];
+            row.PersonTagId = row.PersonTagId == personTagId ? null : personTagId;
+            dirty = true;
+        }
+
+        /// <summary>把 1.1 的行渲染成正文里的可读列表；正文是副表的副本。</summary>
+        private string ComposeLife()
+        {
+            var names = personTags
+                .Where(it => !string.IsNullOrWhiteSpace(it.Name))
+                .ToDictionary(it => it.Id, it => it.Name!);
+
+            var lines = lifeEvents
+                .Where(it => !string.IsNullOrWhiteSpace(it.Content))
+                .Select(it =>
+                {
+                    string content = it.Content!.Trim().Replace("\n", " ");
+                    return it.PersonTagId is Guid id && names.GetValueOrDefault(id) is string name
+                        ? $"- **{name}** {content}"
+                        : $"- {content}";
+                });
+
+            return string.Join("\n", lines);
+        }
+
         private void AddMicroFailure()
         {
             sections.MicroFailures.Add(DailyReviewSections.NewMicroFailure());
@@ -432,8 +558,17 @@ namespace SwashbucklerDiary.Rcl.Pages
             {
                 review.Date = selectedDate;
                 review.SetAffirmationIds(selectedAffirmationIds);
+                sections.Life = ComposeLife();
 
                 if (!await DailyReviewService.SaveAsync(review, sections))
+                {
+                    await AlertService.ErrorAsync(I18n.T("Change failed"));
+                    return;
+                }
+
+                //日课行已经建好，现在把 1.1 的副表整体替换成当前行
+                if (review.Id != Guid.Empty
+                    && !await DailyEventService.SaveAsync(review.Id, lifeEvents))
                 {
                     await AlertService.ErrorAsync(I18n.T("Change failed"));
                     return;

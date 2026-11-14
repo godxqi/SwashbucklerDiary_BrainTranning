@@ -37,7 +37,8 @@ namespace SwashbucklerDiary.Rcl.Services
         public async Task<bool> ArchiveAsync(ArchiveKind kind,
             ArchiveSource source,
             string? content,
-            Guid? sourceWeeklyReviewId = null)
+            Guid? sourceWeeklyReviewId = null,
+            Guid? sourceLessonId = null)
         {
             string value = content?.Trim() ?? string.Empty;
             if (value.Length == 0)
@@ -62,6 +63,8 @@ namespace SwashbucklerDiary.Rcl.Services
                     existing.OccurrenceCount++;
                 }
 
+                //原来没有来源、这次从课题来的，就补上，别让来源永远空着
+                existing.SourceLessonId ??= sourceLessonId;
                 existing.LastOccurredTime = DateTime.Now;
                 existing.UpdateTime = DateTime.Now;
 
@@ -78,6 +81,7 @@ namespace SwashbucklerDiary.Rcl.Services
                 OccurrenceCount = 1,
                 LastOccurredTime = DateTime.Now,
                 SourceWeeklyReviewId = sourceWeeklyReviewId,
+                SourceLessonId = sourceLessonId,
             }).ConfigureAwait(false);
         }
 

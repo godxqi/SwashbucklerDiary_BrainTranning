@@ -19,7 +19,8 @@ namespace SwashbucklerDiary.Rcl.Services
         Task<bool> ArchiveAsync(ArchiveKind kind,
             ArchiveSource source,
             string? content,
-            Guid? sourceWeeklyReviewId = null);
+            Guid? sourceWeeklyReviewId = null,
+            Guid? sourceLessonId = null);
 
         /// <summary>
         /// 7.4 里攒够次数、还没回流的条目。复盘主页的「该回流了」提醒与归档区页顶部都用它。

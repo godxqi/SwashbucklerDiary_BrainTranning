@@ -21,6 +21,9 @@ namespace SwashbucklerDiary.Shared
 
         public Guid? SourceWeeklyReviewId { get; set; }
 
+        /// <summary>来自哪篇课题（课题存档的归档块）。空表示不是从课题来的。</summary>
+        public Guid? SourceLessonId { get; set; }
+
         /// <summary>已经回流到哪一周。非空表示已回流，不再重复提醒。配 <see cref="FedBackYear"/> 使用。</summary>
         public int? FedBackToWeekOfYear { get; set; }
 

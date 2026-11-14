@@ -21,7 +21,8 @@ namespace SwashbucklerDiary.Rcl.Services
                 .ToListAsync();
         }
 
-        public Task<bool> AddAsync(VirtueKind kind, string? content, DateTime? date = null, Guid? sourceDiaryId = null)
+        public Task<bool> AddAsync(VirtueKind kind, string? content, DateTime? date = null,
+            Guid? sourceDiaryId = null, Guid? sourceLessonId = null)
         {
             string value = content?.Trim() ?? string.Empty;
             if (value.Length == 0)
@@ -44,6 +45,7 @@ namespace SwashbucklerDiary.Rcl.Services
                 //补足过去的优点表时由页面给日期；不给就是「现在记的」
                 Date = (date ?? now).Date,
                 SourceDiaryId = sourceDiaryId,
+                SourceLessonId = sourceLessonId,
                 IsAchieved = achieved,
                 AchievedTime = achieved ? now : null,
             });

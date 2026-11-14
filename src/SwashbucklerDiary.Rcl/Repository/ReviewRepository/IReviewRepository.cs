@@ -13,5 +13,11 @@ namespace SwashbucklerDiary.Rcl.Repository
         /// 聚合统计走这里的 SQL，不要在 C# 里遍历全表。
         /// </summary>
         ISugarQueryable<T> Queryable();
+
+        /// <summary>
+        /// 在同一连接上跑一组写操作；失败一起回滚。
+        /// 隐私模式切库由仓储自己处理，调用方不要另开连接。
+        /// </summary>
+        Task<bool> UseTranAsync(Func<ISqlSugarClient, Task> action);
     }
 }

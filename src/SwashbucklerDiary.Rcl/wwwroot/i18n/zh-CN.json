@@ -895,5 +895,19 @@
   "Conflict source": "参考：Thomas-Kilmann 冲突模式 (1974)；费希尔与尤里《谈判力》(1981)。",
   "Dependence source": "参考：依恋理论；霍妮「趋向他人」(1945)；Beattie 的共依存 (1986)。",
   "Intimacy source": "参考：埃里克森「亲密 vs. 孤独」(1950)；苏·约翰逊 EFT；布琳·布朗《脆弱的力量》(2012)。",
-  "Authority source": "参考：阿德勒；伯恩「沟通分析」(1961)；米尔格拉姆 (1963)；爱丽丝·米勒 (1979)。"
+  "Authority source": "参考：阿德勒；伯恩「沟通分析」(1961)；米尔格拉姆 (1963)；爱丽丝·米勒 (1979)。",
+  "Archive to": "归档到",
+  "Already archived": "已经归档过了",
+  "Archived to {0} (time {1})": "已归档到{0}（第{1}次）",
+  "What this reminded you of. Reuse the trigger tags from the state record; the same trigger counts on both sides.": "这次让你想起了什么。复用状态管理表的触因标签，两边的次数合并计算。",
+  "Come back when it is due: did the next step happen, and did the relationship change?": "到期回来看一眼：下一步有没有做到，关系有没有变化。",
+  "Follow-up": "回访",
+  "Follow-up due": "回访日期",
+  "Follow-up note": "回访备注",
+  "Done": "做到",
+  "Partial": "部分做到",
+  "NotDone": "没做到",
+  "Irrelevant": "不再相关",
+  "Turn this repeated lesson into a limiting belief": "把反复出现的课题类型起成一条限制性观念",
+  "Turn this repeated person pattern into a limiting belief": "把反复出现的人物模式起成一条限制性观念"
 }

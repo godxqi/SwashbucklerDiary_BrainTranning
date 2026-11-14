@@ -111,8 +111,55 @@
                             <MIcon>chevron_right</MIcon>
                         </MListItemAction>
                     </MListItem>
+                    <MListItem OnClick="@(() => To("lessons"))">
+                        <MListItemIcon>
+                            <MIcon>list</MIcon>
+                        </MListItemIcon>
+                        <MListItemContent>
+                            <MListItemTitle>
+                                <wc-auto-scroll-text>@(I18n.T("Lesson record"))</wc-auto-scroll-text>
+                            </MListItemTitle>
+                        </MListItemContent>
+                        <MListItemAction>
+                            <MIcon>chevron_right</MIcon>
+                        </MListItemAction>
+                    </MListItem>
                 </MList>
             </MCard>
+
+            @*到期回访：下一步和关系变化要有人检查；这里只露头，点进去处理。*@
+            @if (dueLessons.Count > 0)
+            {
+                <MCard Class="mb-4"
+                       Elevation="0"
+                       Rounded="@("lg")">
+                    <MCardTitle Class="font-weight-bold">
+                        <wc-auto-scroll-text>@(I18n.T("Follow-up due"))</wc-auto-scroll-text>
+                    </MCardTitle>
+                    <MList Class="py-0">
+                        @foreach (var view in dueLessons)
+                        {
+                            <MListItem @key="view.Lesson.Id"
+                                       OnClick="@(() => OpenLesson(view))">
+                                <MListItemIcon>
+                                    <MIcon>event</MIcon>
+                                </MListItemIcon>
+                                <MListItemContent>
+                                    <MListItemTitle>
+                                        <wc-auto-scroll-text>@(view.PersonName ?? I18n.T("Lesson record"))</wc-auto-scroll-text>
+                                    </MListItemTitle>
+                                    <MListItemSubtitle>
+                                        <wc-auto-scroll-text>@($"{view.Lesson.OccurredTime:yyyy/MM/dd} · {view.Lesson.FollowUpDueTime:yyyy/MM/dd}")</wc-auto-scroll-text>
+                                    </MListItemSubtitle>
+                                </MListItemContent>
+                                <MListItemAction>
+                                    <MIcon>chevron_right</MIcon>
+                                </MListItemAction>
+                            </MListItem>
+                        }
+                    </MList>
+                </MCard>
+            }
 
             @*需求 12 + 文档 5.2：同类触因攒够 3 个就该交给月课 3.1 做三列审视*@
             @if (readyTriggers.Count > 0)

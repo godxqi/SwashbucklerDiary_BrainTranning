@@ -87,6 +87,12 @@ namespace SwashbucklerDiary.Rcl.Pages
         /// <summary>3.1 的素材之一：攒够 3 次的触因（文档 5.2）。</summary>
         private List<TriggerCount> readyTriggers = [];
 
+        /// <summary>3.1 的素材之三：这一月反复出现的课题类型。</summary>
+        private List<LessonTypeCount> lessonTypeCandidates = [];
+
+        /// <summary>3.1 的素材之四：这一月反复出现的人物。</summary>
+        private List<LessonPersonCount> lessonPersonCandidates = [];
+
         /// <summary>3.1 的素材之二：这一月反复出现的绊脚石。</summary>
         private List<StumblingBlockView> monthBlocks = [];
 
@@ -165,6 +171,9 @@ namespace SwashbucklerDiary.Rcl.Pages
         [Inject]
         private IDailyReviewService DailyReviewService { get; set; } = default!;
 
+        [Inject]
+        private ILessonService LessonService { get; set; } = default!;
+
         /// <summary>复盘主页点进来的那一月。缺省就是当前该做的那一月。</summary>
         [SupplyParameterFromQuery]
         private DateOnly? Date { get; set; }
@@ -240,6 +249,8 @@ namespace SwashbucklerDiary.Rcl.Pages
                 .GetByMonthlyReviewAsync(review?.Id ?? Guid.Empty);
             readyTriggers = await TriggerService.GetReadyForMonthlyAsync(TriggerThreshold);
             monthBlocks = await StumblingBlockService.GetByMonthAsync(year, month);
+            lessonTypeCandidates = await LessonService.GetMonthlyCandidateTypesAsync(monthStart);
+            lessonPersonCandidates = await LessonService.GetMonthlyCandidatePersonsAsync(monthStart);
 
             step33Note = review?.Step33Note ?? string.Empty;
 
@@ -381,6 +392,24 @@ namespace SwashbucklerDiary.Rcl.Pages
             {
                 MonthlyReviewId = review?.Id ?? Guid.Empty,
                 Assertion = category,
+            });
+        }
+
+        private void UseLessonTypeAsBelief(LessonTypeCount item)
+        {
+            OpenBeliefDialog(new LimitingBeliefModel
+            {
+                MonthlyReviewId = review?.Id ?? Guid.Empty,
+                Assertion = I18n.T(item.Type.ToString()),
+            });
+        }
+
+        private void UseLessonPersonAsBelief(LessonPersonCount item)
+        {
+            OpenBeliefDialog(new LimitingBeliefModel
+            {
+                MonthlyReviewId = review?.Id ?? Guid.Empty,
+                Assertion = item.PersonName ?? string.Empty,
             });
         }
 

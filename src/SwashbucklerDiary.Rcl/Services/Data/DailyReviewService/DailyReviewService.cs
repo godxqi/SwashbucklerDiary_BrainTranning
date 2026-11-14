@@ -19,13 +19,16 @@ namespace SwashbucklerDiary.Rcl.Services
 
         private readonly IReviewScheduleService _scheduleService;
 
+        private readonly IDailyEventService _dailyEventService;
+
         public DailyReviewService(IReviewRepository<DailyReviewModel> dailyReviewRepository,
             IReviewRepository<SelfAffirmationModel> affirmationRepository,
             IDiaryService diaryService,
             IMediaResourceManager mediaResourceManager,
             II18nService i18n,
             IStumblingBlockService stumblingBlockService,
-            IReviewScheduleService scheduleService)
+            IReviewScheduleService scheduleService,
+            IDailyEventService dailyEventService)
         {
             _dailyReviewRepository = dailyReviewRepository;
             _affirmationRepository = affirmationRepository;
@@ -34,6 +37,7 @@ namespace SwashbucklerDiary.Rcl.Services
             _i18n = i18n;
             _stumblingBlockService = stumblingBlockService;
             _scheduleService = scheduleService;
+            _dailyEventService = dailyEventService;
         }
 
         public async Task<DailyReviewModel?> GetByDateAsync(DateTime date)
@@ -156,6 +160,12 @@ namespace SwashbucklerDiary.Rcl.Services
             if (diary is not null && !await _diaryService.DeleteAsync(diary.Id).ConfigureAwait(false))
             {
                 return false;
+            }
+
+            //1.1 的行挂在日课行上；日课删了就别留孤儿
+            if (review is not null)
+            {
+                await _dailyEventService.DeleteByReviewAsync(review.Id).ConfigureAwait(false);
             }
 
             //后半段删不掉（比如并发删过）不算失败：那一天本来就没日课了，结果是对的

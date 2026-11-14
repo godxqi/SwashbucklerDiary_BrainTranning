@@ -6,8 +6,7 @@
   「课题」借自阿德勒的「人生课题」（工作/交友/爱）与「课题分离」，经岸见一郎
   《被讨厌的勇气》通俗化；「每个人都是来给你上课的」是新时代/佛教缘起的流行说法
   （Caroline Myss《神圣契约》, 2001；Brian Weiss《前世今生》, 1988），属于意义框架，
-  不是实证心理学。这个页面只把它当自省工具：记录在某个人的某件事上学到了什么、有什么感悟，
-  最后再回头归类「这段相处让我完成了什么课题」——类型是结论，不是入场标签。*@
+  不是实证心理学。这个页面只把它当自省工具。*@
 
 <div class="d-flex flex-column" style="height:100%;">
     <MyAppBar Title="@(I18n.T("Lesson record"))"
@@ -15,7 +14,6 @@
     </MyAppBar>
 
     <ScrollContainer>
-        @*照状态管理表的写法：一节一格，不折叠；选项一律用芯片，正文只当导出用的可读副本。*@
         <div class="review-form">
             <div class="review-section">
                 <div class="review-label">@(I18n.T("When it happened"))</div>
@@ -26,8 +24,7 @@
                 </MButton>
             </div>
 
-            @*人物不是「课题的原因」，只是索引：人物标签负责「和谁」，类型/触因负责「哪类功课」。
-              这样不会把责任推给某个人，也符合阿德勒「课题分离」的边界。*@
+            @*人物不是「课题的原因」，只是索引：人物标签负责「和谁」，类型/触因负责「哪类功课」。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("Person"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.PersonDescription))</div>
@@ -52,8 +49,7 @@
                 </MChipGroup>
             </div>
 
-            @*事件只写可观察的行为和原话，不写评判——这条来自非暴力沟通的「观察 vs. 评价」
-              （马歇尔·卢森堡），也是项目里敌人表「写行为，不写想法」的同一条原则。*@
+            @*事件只写可观察的行为和原话，不写评判。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("What happened"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.EventDescription))</div>
@@ -64,8 +60,33 @@
                 </MTextarea>
             </div>
 
-            @*四层感受（身体/想法/情绪/意义感）取自项目方法文档（Tara Swart《大脑训练手册》），
-              状态管理表 5.1 原样搬过来；身体层与躯体心理学（van der Kolk《身体从未忘记》, 2014）同源。*@
+            @*触因和状态管理表共用标签，两边的次数合并计算。*@
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("Trigger"))</div>
+                <div class="review-desc">@(I18n.T(LessonText.TriggerDescription))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var trigger in triggers)
+                    {
+                        <MChip @key="trigger.Tag.Id"
+                               Class="@ChipClass(triggerTagId == trigger.Tag.Id)"
+                               Filter="true"
+                               IsActive="triggerTagId == trigger.Tag.Id"
+                               OnClick="@(() => SelectTrigger(trigger.Tag.Id))">
+                            @trigger.Tag.Name
+                            <span class="review-group-index">@trigger.Count</span>
+                        </MChip>
+                    }
+                    <MChip Class="review-chip"
+                           IsActive="false"
+                           OnClick="@(() => showAddTrigger = true)">
+                        <MIcon Left="true">add</MIcon>
+                        @(I18n.T("Add"))
+                    </MChip>
+                </MChipGroup>
+            </div>
+
+            @*四层感受：身体/想法/情绪/意义感。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("My reaction"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.ReactionDescription))</div>
@@ -103,8 +124,6 @@
                 </div>
             </div>
 
-            @*照见：荣格的「投射/阴影」；库利的「镜中我」(1902)。
-              「外面没有别人」是张德芬/《零极限》的通俗化，不是荣格原话，别把它当原典。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("What it mirrors"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.MirrorDescription))</div>
@@ -115,8 +134,6 @@
                 </MTextarea>
             </div>
 
-            @*边界：阿德勒「课题分离」；Cloud 与 Townsend《Boundaries》(1992)。
-              这一格回答「哪些是我的责任、哪些不是」，是防止把伤害解释成「我的功课」的关键。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("Boundary"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.BoundaryDescription))</div>
@@ -127,8 +144,7 @@
                 </MTextarea>
             </div>
 
-            @*带走一句：项目方法文档 4 的自我肯定库；自我肯定理论（Steele, 1988）
-              与 CBT 的认知重构是邻近机制。*@
+            @*带走一句：句子先写下来，再像周课 2.4 的归档块那样收进已有的某一栏。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("One line to keep"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.TakeawayDescription))</div>
@@ -137,10 +153,54 @@
                            Class="review-textarea"
                            Rows="2">
                 </MTextarea>
+
+                <div class="review-subitem-label">@(I18n.T("Archive to"))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var target in archiveTargets)
+                    {
+                        <MChip @key="target"
+                               Class="@ChipClass(archiveTarget == target)"
+                               Filter="true"
+                               IsActive="archiveTarget == target"
+                               OnClick="@(() => archiveTarget = target)">
+                            @ArchiveTargetName(target)
+                        </MChip>
+                    }
+                </MChipGroup>
+
+                @if (archiveTarget == ArchiveTarget.MacroGoal)
+                {
+                    if (macroGoals.Count == 0)
+                    {
+                        <div class="review-desc">@(I18n.T("Nothing here yet"))</div>
+                    }
+                    else
+                    {
+                        <MChipGroup Class="review-chip-group"
+                                    Multiple="true">
+                            @foreach (var goal in macroGoals)
+                            {
+                                <MChip @key="goal.Id"
+                                       Class="@ChipClass(macroGoalId == goal.Id)"
+                                       Filter="true"
+                                       IsActive="macroGoalId == goal.Id"
+                                       OnClick="@(() => macroGoalId = macroGoalId == goal.Id ? null : goal.Id)">
+                                    @goal.Title
+                                </MChip>
+                            }
+                        </MChipGroup>
+                    }
+                }
+
+                <MButton Class="review-add"
+                         Disabled="@(archiveSaving || string.IsNullOrWhiteSpace(takeaway) || (archiveTarget == ArchiveTarget.MacroGoal && !macroGoals.Any(it => it.Id == macroGoalId)))"
+                         OnClick="ArchiveTakeawayAsync">
+                    <MIcon Left="true">archive</MIcon>
+                    @(I18n.T("Archive it"))
+                </MButton>
             </div>
 
-            @*下一步：行为激活（CBT）；Gollwitzer 的「执行意图」(1999)；SMART（Doran, 1981）。
-              要的是具体动作，不是决心。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("Next step"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.NextStepDescription))</div>
@@ -151,11 +211,39 @@
                 </MTextarea>
             </div>
 
-            @*总结放最后：先把经历、感受和收获写完，再回头归类这段相处完成了什么课题。
-              类型的出处逐条写在 LessonType 的 XML 注释里：
-              边界=阿德勒/Cloud；被评价=阿德勒/库利/萨特；信任=依恋/埃里克森；
-              表达=卢森堡/罗杰斯；冲突=Thomas-Kilmann/费希尔；依赖=依恋/霍妮；
-              亲密=埃里克森/EFT/布琳·布朗；权威=阿德勒/伯恩/米尔格拉姆/米勒。*@
+            @*回访：到期回来看下一步有没有做到、关系有没有变化。*@
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("Follow-up"))</div>
+                <div class="review-desc">@(I18n.T(LessonText.FollowUpDescription))</div>
+                <MButton Class="review-add"
+                         OnClick="@(() => showFollowUpDatePicker = true)">
+                    <MIcon Left="true">event</MIcon>
+                    @(I18n.T("Follow-up due")) · @(followUpDueTime?.ToString("yyyy/MM/dd") ?? string.Empty)
+                </MButton>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var status in followUpStatuses)
+                    {
+                        <MChip @key="status"
+                               Class="@ChipClass(followUpStatus == status)"
+                               Filter="true"
+                               IsActive="followUpStatus == status"
+                               OnClick="@(() => ToggleFollowUpStatus(status))">
+                            @(I18n.T(status.ToString()))
+                        </MChip>
+                    }
+                </MChipGroup>
+                <div class="review-subitem">
+                    <div class="review-subitem-label">@(I18n.T("Follow-up note"))</div>
+                    <MTextarea @bind-Value="followUpNote"
+                               @bind-Value:after="MarkDirty"
+                               Class="review-textarea"
+                               Rows="2">
+                    </MTextarea>
+                </div>
+            </div>
+
+            @*总结放最后：先把经历、感受和收获写完，再回头归类这段相处完成了什么课题。*@
             <div class="review-section">
                 <div class="review-label">@(I18n.T("Lesson type"))</div>
                 <div class="review-desc">@(I18n.T(LessonText.TypeDescription))</div>
@@ -173,7 +261,6 @@
                         </MChip>
                     }
                 </MChipGroup>
-                @*点了哪个类型，就在下面给出它的简介——和日课 1.6 点情绪芯片同一个手感。*@
                 @foreach (var type in lessonTypes.Where(it => selectedTypes.Contains(it)))
                 {
                     <div class="review-picked">
@@ -199,9 +286,20 @@
                      Max="@Today">
 </MultiSizeDatePicker>
 
+<MultiSizeDatePicker @bind-Visible="showFollowUpDatePicker"
+                     @bind-Value="SelectedFollowUpDate">
+</MultiSizeDatePicker>
+
 <InputDialog @bind-Visible="showAddPerson"
              Title="@(I18n.T("Who"))"
              Placeholder="@(I18n.T("Person name"))"
              MaxLength="50"
              OnOK="AddPersonAsync">
+</InputDialog>
+
+<InputDialog @bind-Visible="showAddTrigger"
+             Title="@(I18n.T("Add trigger"))"
+             Placeholder="@(I18n.T("Please enter content"))"
+             MaxLength="50"
+             OnOK="AddTriggerAsync">
 </InputDialog>

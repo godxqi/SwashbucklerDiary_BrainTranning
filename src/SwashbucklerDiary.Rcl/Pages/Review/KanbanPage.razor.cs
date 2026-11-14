@@ -35,6 +35,9 @@ namespace SwashbucklerDiary.Rcl.Pages
         /// <summary>7.4 里攒够次数、还没回流的条目。</summary>
         private List<ArchiveItemModel> feedbackCandidates = [];
 
+        /// <summary>到期且还没回访的课题。</summary>
+        private List<LessonView> dueLessons = [];
+
         private SwiperTabItems swiperTabItems = default!;
 
         [Inject]
@@ -48,6 +51,9 @@ namespace SwashbucklerDiary.Rcl.Pages
 
         [Inject]
         private IArchiveService ArchiveService { get; set; } = default!;
+
+        [Inject]
+        private ILessonService LessonService { get; set; } = default!;
 
         protected override void ReadSettings()
         {
@@ -80,6 +86,7 @@ namespace SwashbucklerDiary.Rcl.Pages
                 : [];
             readyTriggers = await TriggerService.GetReadyForMonthlyAsync(TriggerThreshold);
             feedbackCandidates = await ArchiveService.GetFeedbackCandidatesAsync(FeedbackThreshold);
+            dueLessons = await LessonService.GetDueFollowUpsAsync(DateTime.Now);
         }
 
         /// <summary>点一下就重复一次并计数（需求 10）。计数直接回写屏幕上那个数字，不用重查。</summary>
@@ -115,6 +122,11 @@ namespace SwashbucklerDiary.Rcl.Pages
         private void OpenTriggers()
         {
             To("triggers");
+        }
+
+        private void OpenLesson(LessonView view)
+        {
+            To($"lesson?Id={view.Lesson.Id}");
         }
 
         /// <summary>7.4 的回流提醒：点进去落在归档区的「经历的微小失败」那一栏上。</summary>

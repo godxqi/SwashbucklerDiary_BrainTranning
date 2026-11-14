@@ -6,6 +6,93 @@
 </MyAppBar>
 
 <ScrollContainer Id="@scrollContainerId">
+    @if (isPerson)
+    {
+        <MCard Class="mb-4"
+               Elevation="0"
+               Rounded="@("lg")">
+            <MCardTitle Class="font-weight-bold">
+                <wc-auto-scroll-text>@(I18n.T("Lesson record"))</wc-auto-scroll-text>
+            </MCardTitle>
+            <div class="px-4 pb-4">
+                @if (typeCounts.Count > 0)
+                {
+                    <div class="review-desc">@TypeCountText()</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(currentBoundary))
+                {
+                    <div class="review-desc">@(I18n.T("Boundary")) · @currentBoundary</div>
+                }
+                @if (dueCount > 0)
+                {
+                    <div class="review-desc">@(I18n.T("Follow-up due")) · @dueCount</div>
+                }
+                @if (typeCounts.Count == 0
+                     && string.IsNullOrWhiteSpace(currentBoundary)
+                     && dueCount == 0)
+                {
+                    <div class="review-desc">@(I18n.T("Nothing here yet"))</div>
+                }
+            </div>
+        </MCard>
+
+        @if (lessons.Count > 0)
+        {
+            <MList Class="py-0 mb-4">
+                @foreach (var view in lessons)
+                {
+                    <MListItem @key="view.Lesson.Id"
+                               OnClick="@(() => OpenLesson(view))">
+                        <MListItemIcon>
+                            <MIcon>school</MIcon>
+                        </MListItemIcon>
+                        <MListItemContent>
+                            <MListItemTitle>
+                                <wc-auto-scroll-text>@LessonTitle(view)</wc-auto-scroll-text>
+                            </MListItemTitle>
+                            <MListItemSubtitle>
+                                <wc-auto-scroll-text>@string.Join("、", view.Types.Select(it => I18n.T(it.ToString())))</wc-auto-scroll-text>
+                            </MListItemSubtitle>
+                        </MListItemContent>
+                        <MListItemAction>
+                            <MIcon>chevron_right</MIcon>
+                        </MListItemAction>
+                    </MListItem>
+                }
+            </MList>
+        }
+
+        @if (dailyEvents.Count > 0)
+        {
+            <MCard Class="mb-4"
+                   Elevation="0"
+                   Rounded="@("lg")">
+                <MCardTitle Class="font-weight-bold">
+                    <wc-auto-scroll-text>@(I18n.T("Daily review"))</wc-auto-scroll-text>
+                </MCardTitle>
+                <MList Class="py-0">
+                    @foreach (var item in dailyEvents)
+                    {
+                        <MListItem @key="item.Event.Id"
+                                   OnClick="@(() => OpenDailyReview(item))">
+                            <MListItemIcon>
+                                <MIcon>event_note</MIcon>
+                            </MListItemIcon>
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@item.Event.Content</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                <MListItemSubtitle>
+                                    <wc-auto-scroll-text>@item.Date.ToString("yyyy/MM/dd")</wc-auto-scroll-text>
+                                </MListItemSubtitle>
+                            </MListItemContent>
+                        </MListItem>
+                    }
+                </MList>
+            </MCard>
+        }
+    }
+
     <DiaryCardList @bind-Value="Diaries"
                    @bind-Tags="Tags" />
 </ScrollContainer>
@@ -13,6 +100,13 @@
 <div class="right-bottom-float-area">
     <BackTopButton Selector="@scrollContainerSelector">
     </BackTopButton>
+    @if (isPerson)
+    {
+        <MyFloatButton Icon="add"
+                       Show="true"
+                       OnClick="@(() => To("lesson"))">
+        </MyFloatButton>
+    }
     <MyFloatButton Icon="mdi:mdi-pencil"
                    OnClick="ToWrite">
     </MyFloatButton>

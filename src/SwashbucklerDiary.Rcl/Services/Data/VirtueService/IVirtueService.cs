@@ -25,7 +25,8 @@ namespace SwashbucklerDiary.Rcl.Services
         /// <paramref name="date"/> 是这条归属的日期，补足过去的优点表时由页面给；<b>不传就是「现在记的」</b>。
         /// </para>
         /// </summary>
-        Task<bool> AddAsync(VirtueKind kind, string? content, DateTime? date = null, Guid? sourceDiaryId = null);
+        Task<bool> AddAsync(VirtueKind kind, string? content, DateTime? date = null,
+            Guid? sourceDiaryId = null, Guid? sourceLessonId = null);
 
         Task<bool> UpdateAsync(VirtueEntryModel entry);
 

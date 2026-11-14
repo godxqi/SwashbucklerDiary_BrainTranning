@@ -65,6 +65,8 @@ namespace SwashbucklerDiary.Server.Extensions
             services.AddScoped<IMacroGoalService, MacroGoalService>();
             services.AddScoped<IMonthlyReviewService, MonthlyReviewService>();
             services.AddScoped<IStateRecordService, StateRecordService>();
+            services.AddScoped<ILessonService, LessonService>();
+            services.AddScoped<IDailyEventService, DailyEventService>();
             services.AddScoped<IReviewStatsService, ReviewStatsService>();
             services.AddScoped<IReviewExportService, ReviewExportService>();
 

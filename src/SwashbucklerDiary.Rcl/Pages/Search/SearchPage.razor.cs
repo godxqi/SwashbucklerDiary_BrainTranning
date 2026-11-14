@@ -4,6 +4,7 @@ using SqlSugar;
 using SwashbucklerDiary.Rcl.Components;
 using SwashbucklerDiary.Rcl.Extensions;
 using SwashbucklerDiary.Rcl.Models;
+using SwashbucklerDiary.Rcl.Services;
 using SwashbucklerDiary.Shared;
 using System.Linq.Expressions;
 
@@ -34,6 +35,11 @@ namespace SwashbucklerDiary.Rcl.Pages
         private string scrollContainerSelector = string.Empty;
 
         private List<DynamicListItem> filterItems = [];
+
+        private List<LessonView> lessonResults = [];
+
+        [Inject]
+        private ILessonService LessonService { get; set; } = default!;
 
         [Parameter]
         [SupplyParameterFromQuery]
@@ -75,6 +81,24 @@ namespace SwashbucklerDiary.Rcl.Pages
 
             Diaries = diaries.OrderByDescending(it => it.CreateTime)
                 .ToList();
+
+            //课题不再进日记流，但搜索要能翻到；只在有搜索词时查，不拖慢空搜索
+            lessonResults = string.IsNullOrWhiteSpace(search)
+                ? []
+                : await LessonService.SearchAsync(search);
+        }
+
+        private void OpenLesson(LessonView view)
+        {
+            To($"lesson?Id={view.Lesson.Id}");
+        }
+
+        private string LessonSubtitle(LessonView view)
+        {
+            string date = view.Lesson.OccurredTime.ToString("yyyy/MM/dd");
+            return string.IsNullOrWhiteSpace(view.Lesson.Event)
+                ? date
+                : $"{date} · {view.Lesson.Event.Trim()}";
         }
 
         private DateOnly MinDate => DateFilterForm.GetDateMinValue();

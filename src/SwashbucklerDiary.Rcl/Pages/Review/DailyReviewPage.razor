@@ -85,14 +85,51 @@
                 </div>
             }
 
+            @*1.1 改成一件事一行：可挂一个人物标签，行存副表，正文由它渲染。*@
             <div class="review-section">
                 <div class="review-label">1.1 @dailyTitles[0]</div>
                 <div class="review-desc">@dailyDescriptions[0]</div>
-                <MTextarea @bind-Value="sections.Life"
-                           @bind-Value:after="MarkDirty"
-                           Class="review-textarea"
-                           Rows="3">
-                </MTextarea>
+                @for (int i = 0; i < lifeEvents.Count; i++)
+                {
+                    int index = i;
+                    <div class="review-subitem">
+                        <MTextarea @bind-Value="lifeEvents[index].Content"
+                                   @bind-Value:after="MarkDirty"
+                                   Class="review-textarea"
+                                   Rows="2">
+                        </MTextarea>
+                        <MChipGroup Class="review-chip-group"
+                                    Multiple="true">
+                            @foreach (var tag in personTags)
+                            {
+                                <MChip @key="tag.Id"
+                                       Class="@ChipClass(lifeEvents[index].PersonTagId == tag.Id)"
+                                       Filter="true"
+                                       IsActive="lifeEvents[index].PersonTagId == tag.Id"
+                                       OnClick="@(() => SelectLifePerson(index, tag.Id))">
+                                    @tag.Name
+                                </MChip>
+                            }
+                            <MChip IsActive="false"
+                                   OnClick="@(() => AskAddPerson(index))">
+                                <MIcon Left="true">add</MIcon>
+                                @(I18n.T("Add"))
+                            </MChip>
+                        </MChipGroup>
+                        @if (lifeEvents.Count > 1)
+                        {
+                            <MButton Icon
+                                     OnClick="@(() => RemoveLifeEvent(index))">
+                                <MIcon>delete</MIcon>
+                            </MButton>
+                        }
+                    </div>
+                }
+                <MButton Class="review-add"
+                         OnClick="AddLifeEvent">
+                    <MIcon Left="true">add</MIcon>
+                    @(I18n.T("Add"))
+                </MButton>
             </div>
 
             <div class="review-section">
@@ -254,6 +291,13 @@
                      Events="eventsDates"
                      Max="@Today">
 </MultiSizeDatePicker>
+
+<InputDialog @bind-Visible="showAddPerson"
+             Title="@(I18n.T("Who"))"
+             Placeholder="@(I18n.T("Person name"))"
+             MaxLength="50"
+             OnOK="AddPersonAsync">
+</InputDialog>
 
 <InputDialog @bind-Visible="showAddAffirmation"
              Title="@(I18n.T("Add affirmation"))"

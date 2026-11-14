@@ -50,6 +50,35 @@
                    NotFoundText="@(I18n.T("Not Found"))"
                    OnClick="ToRead">
     </DiaryCardList>
+
+    @if (lessonResults.Count > 0)
+    {
+        <div class="review-form mt-4">
+            <div class="review-label">@(I18n.T("Lesson record"))</div>
+            <MList Class="py-0">
+                @foreach (var view in lessonResults)
+                {
+                    <MListItem @key="view.Lesson.Id"
+                               OnClick="@(() => OpenLesson(view))">
+                        <MListItemIcon>
+                            <MIcon>school</MIcon>
+                        </MListItemIcon>
+                        <MListItemContent>
+                            <MListItemTitle>
+                                <wc-auto-scroll-text>@(view.PersonName ?? I18n.T("Lesson record"))</wc-auto-scroll-text>
+                            </MListItemTitle>
+                            <MListItemSubtitle>
+                                <wc-auto-scroll-text>@LessonSubtitle(view)</wc-auto-scroll-text>
+                            </MListItemSubtitle>
+                        </MListItemContent>
+                        <MListItemAction>
+                            <MIcon>chevron_right</MIcon>
+                        </MListItemAction>
+                    </MListItem>
+                }
+            </MList>
+        </div>
+    }
 </ScrollContainer>
 
 <div class="right-bottom-float-area">

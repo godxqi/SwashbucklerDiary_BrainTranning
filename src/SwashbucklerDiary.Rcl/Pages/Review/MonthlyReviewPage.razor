@@ -86,7 +86,10 @@
                 @*3.1 三列审视：最多六条。素材来自攒够 3 次的触因与这一月反复出现的绊脚石。*@
                 @if (step == 1)
                 {
-                    @if (readyTriggers.Count > 0 || FrequentCategories.Count > 0)
+                    @if (readyTriggers.Count > 0
+                         || FrequentCategories.Count > 0
+                         || lessonTypeCandidates.Count > 0
+                         || lessonPersonCandidates.Count > 0)
                     {
                         <div class="review-subitem-label">@(I18n.T("Material for this step"))</div>
 
@@ -107,6 +110,26 @@
                                  @onclick="@(() => UseCategoryAsBelief(item.Category))">
                                 <div class="review-group-index">@($"{item.Category} ×{item.Count}")</div>
                                 <div class="review-desc">@(I18n.T("Turn this repeated stumbling block into a limiting belief"))</div>
+                            </div>
+                        }
+
+                        @foreach (var item in lessonTypeCandidates)
+                        {
+                            <div @key="item.Type"
+                                 class="review-candidate"
+                                 @onclick="@(() => UseLessonTypeAsBelief(item))">
+                                <div class="review-group-index">@($"{I18n.T(item.Type.ToString())} ×{item.Count}")</div>
+                                <div class="review-desc">@(I18n.T("Turn this repeated lesson into a limiting belief"))</div>
+                            </div>
+                        }
+
+                        @foreach (var item in lessonPersonCandidates)
+                        {
+                            <div @key="item.PersonTagId"
+                                 class="review-candidate"
+                                 @onclick="@(() => UseLessonPersonAsBelief(item))">
+                                <div class="review-group-index">@($"{item.PersonName ?? I18n.T("Person")} ×{item.Count}")</div>
+                                <div class="review-desc">@(I18n.T("Turn this repeated person pattern into a limiting belief"))</div>
                             </div>
                         }
                     }

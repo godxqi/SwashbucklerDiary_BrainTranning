@@ -1,0 +1,97 @@
+@page "/lessons"
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+<div class="d-flex flex-column" style="height:100%;">
+    <MyAppBar Title="@(I18n.T("Lesson record"))"
+              OnClick="NavigateToBack">
+    </MyAppBar>
+
+    <ScrollContainer>
+        <div class="review-form">
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("Person"))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var tag in personTags)
+                    {
+                        <MChip @key="tag.Id"
+                               Class="@ChipClass(selectedPersonId == tag.Id)"
+                               Filter="true"
+                               IsActive="selectedPersonId == tag.Id"
+                               OnClick="@(() => TogglePerson(tag.Id))">
+                            @tag.Name
+                        </MChip>
+                    }
+                </MChipGroup>
+            </div>
+
+            <div class="review-section">
+                <div class="review-label">@(I18n.T("Lesson type"))</div>
+                <MChipGroup Class="review-chip-group"
+                            Multiple="true">
+                    @foreach (var type in lessonTypes)
+                    {
+                        <MChip @key="type"
+                               Class="@ChipClass(selectedType == type)"
+                               Filter="true"
+                               IsActive="selectedType == type"
+                               OnClick="@(() => ToggleType(type))">
+                            <MIcon Left="true">@GlobalConfiguration.GetLessonTypeIcon(type)</MIcon>
+                            @(I18n.T(type.ToString()))
+                        </MChip>
+                    }
+                </MChipGroup>
+            </div>
+
+            <div class="review-section">
+                <MChip Class="@ChipClass(dueOnly)"
+                       Filter="true"
+                       IsActive="dueOnly"
+                       OnClick="ToggleDue">
+                    <MIcon Left="true">event</MIcon>
+                    @(I18n.T("Follow-up due"))
+                </MChip>
+            </div>
+
+            @if (lessons.Count == 0)
+            {
+                <EmptyResult Show="true"
+                             Text="@I18n.T("Nothing here yet")">
+                </EmptyResult>
+            }
+            else
+            {
+                <MList Class="py-0">
+                    @foreach (var view in lessons)
+                    {
+                        <MListItem @key="view.Lesson.Id"
+                                   OnClick="@(() => Open(view))">
+                            <MListItemIcon>
+                                <MIcon>school</MIcon>
+                            </MListItemIcon>
+                            <MListItemContent>
+                                <MListItemTitle>
+                                    <wc-auto-scroll-text>@(view.PersonName ?? I18n.T("Lesson record"))</wc-auto-scroll-text>
+                                </MListItemTitle>
+                                <MListItemSubtitle>
+                                    <wc-auto-scroll-text>@Subtitle(view)</wc-auto-scroll-text>
+                                </MListItemSubtitle>
+                            </MListItemContent>
+                            <MListItemAction>
+                                <MIcon>chevron_right</MIcon>
+                            </MListItemAction>
+                        </MListItem>
+                    }
+                </MList>
+            }
+        </div>
+    </ScrollContainer>
+</div>
+
+<div class="right-bottom-float-area">
+    <MyFloatButton Icon="add"
+                   Show="true"
+                   OnClick="@(() => To("lesson"))">
+    </MyFloatButton>
+</div>

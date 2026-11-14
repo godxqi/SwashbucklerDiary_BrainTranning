@@ -572,5 +572,19 @@
   "Conflict source": "參考：Thomas-Kilmann 衝突模式 (1974)；費希爾與尤里《談判力》(1981)。",
   "Dependence source": "參考：依附理論；霍妮「趨向他人」(1945)；Beattie 的共依存 (1986)。",
   "Intimacy source": "參考：埃里克森「親密 vs. 孤獨」(1950)；蘇·約翰遜 EFT；布琳·布朗《脆弱的力量》(2012)。",
-  "Authority source": "參考：阿德勒；伯恩「溝通分析」(1961)；米爾格拉姆 (1963)；愛麗絲·米勒 (1979)。"
+  "Authority source": "參考：阿德勒；伯恩「溝通分析」(1961)；米爾格拉姆 (1963)；愛麗絲·米勒 (1979)。",
+  "Archive to": "歸檔到",
+  "Already archived": "已經歸檔過了",
+  "Archived to {0} (time {1})": "已歸檔到{0}（第{1}次）",
+  "What this reminded you of. Reuse the trigger tags from the state record; the same trigger counts on both sides.": "這次讓你想起了什麼。重用狀態管理表的觸因標籤，兩邊的次數合併計算。",
+  "Come back when it is due: did the next step happen, and did the relationship change?": "到期回來看一眼：下一步有沒有做到，關係有沒有變化。",
+  "Follow-up": "回訪",
+  "Follow-up due": "回訪日期",
+  "Follow-up note": "回訪備註",
+  "Done": "做到",
+  "Partial": "部分做到",
+  "NotDone": "沒做到",
+  "Irrelevant": "不再相關",
+  "Turn this repeated lesson into a limiting belief": "把反覆出現的課題類型起成一條限制性觀念",
+  "Turn this repeated person pattern into a limiting belief": "把反覆出現的人物模式起成一條限制性觀念"
 }

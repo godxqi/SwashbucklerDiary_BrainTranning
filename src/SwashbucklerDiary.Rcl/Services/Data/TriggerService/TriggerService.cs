@@ -10,11 +10,15 @@ namespace SwashbucklerDiary.Rcl.Services
 
         private readonly IReviewRepository<StateRecordModel> _stateRepository;
 
+        private readonly IReviewRepository<LessonModel> _lessonRepository;
+
         public TriggerService(ITagService tagService,
-            IReviewRepository<StateRecordModel> stateRepository)
+            IReviewRepository<StateRecordModel> stateRepository,
+            IReviewRepository<LessonModel> lessonRepository)
         {
             _tagService = tagService;
             _stateRepository = stateRepository;
+            _lessonRepository = lessonRepository;
         }
 
         public async Task<List<TriggerCount>> GetWithCountsAsync()
@@ -99,6 +103,24 @@ namespace SwashbucklerDiary.Rcl.Services
                     .ConfigureAwait(false);
             }
 
+            //课题里的触因也指向这个标签；不清掉就会留下孤儿引用
+            var lessons = await _lessonRepository.Queryable()
+                .Where(it => it.TriggerTagId == id)
+                .ToListAsync()
+                .ConfigureAwait(false);
+            if (lessons.Count > 0)
+            {
+                foreach (var lesson in lessons)
+                {
+                    lesson.TriggerTagId = null;
+                    lesson.UpdateTime = DateTime.Now;
+                }
+
+                await _lessonRepository
+                    .UpdateAsync(lessons, it => new { it.TriggerTagId, it.UpdateTime })
+                    .ConfigureAwait(false);
+            }
+
             return await _tagService.DeleteAsync(id).ConfigureAwait(false);
         }
 
@@ -131,9 +153,31 @@ namespace SwashbucklerDiary.Rcl.Services
                 .ToListAsync()
                 .ConfigureAwait(false);
 
-            return rows
+            Dictionary<Guid, int> counts = rows
                 .Where(it => it.TriggerTagId is not null)
                 .ToDictionary(it => it.TriggerTagId!.Value, it => it.Count);
+
+            //课题里的触因也算「同类攒了几个」：周课 2.2 与月课 3.1 看的是同一份次数
+            var lessonRows = await _lessonRepository.Queryable()
+                .Where(it => it.TriggerTagId != null)
+                .GroupBy(it => it.TriggerTagId)
+                .Select(it => new
+                {
+                    TriggerTagId = it.TriggerTagId,
+                    Count = SqlFunc.AggregateCount(it.Id),
+                })
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            foreach (var row in lessonRows)
+            {
+                if (row.TriggerTagId is Guid id)
+                {
+                    counts[id] = counts.GetValueOrDefault(id) + row.Count;
+                }
+            }
+
+            return counts;
         }
     }
 }

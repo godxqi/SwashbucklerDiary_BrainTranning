@@ -572,5 +572,19 @@
   "Conflict source": "Sources: Thomas-Kilmann conflict modes (1974); Fisher and Ury, Getting to Yes (1981).",
   "Dependence source": "Sources: attachment theory; Horney's moving toward people (1945); Beattie on codependency (1986).",
   "Intimacy source": "Sources: Erikson's intimacy vs. isolation (1950); Sue Johnson's EFT; Brene Brown, Daring Greatly (2012).",
-  "Authority source": "Sources: Adler; Berne's transactional analysis (1961); Milgram (1963); Alice Miller (1979)."
+  "Authority source": "Sources: Adler; Berne's transactional analysis (1961); Milgram (1963); Alice Miller (1979).",
+  "Archive to": "الأرشفة إلى",
+  "Already archived": "تمت أرشفته بالفعل",
+  "Archived to {0} (time {1})": "تمت الأرشفة إلى {0} (المرة {1})",
+  "What this reminded you of. Reuse the trigger tags from the state record; the same trigger counts on both sides.": "بماذا ذكّرك هذا؟ أعد استخدام وسوم المحفز من سجل الحالة؛ يُجمع العد من الجانبين.",
+  "Come back when it is due: did the next step happen, and did the relationship change?": "عُد عند الموعد: هل حدثت الخطوة التالية وهل تغيرت العلاقة؟",
+  "Follow-up": "المتابعة",
+  "Follow-up due": "تاريخ المتابعة",
+  "Follow-up note": "ملاحظة المتابعة",
+  "Done": "تم",
+  "Partial": "جزئي",
+  "NotDone": "لم يتم",
+  "Irrelevant": "لم يعد ذا صلة",
+  "Turn this repeated lesson into a limiting belief": "حوّل نوع الدرس المتكرر إلى اعتقاد مقيّد",
+  "Turn this repeated person pattern into a limiting belief": "حوّل نمط الشخص المتكرر إلى اعتقاد مقيّد"
 }

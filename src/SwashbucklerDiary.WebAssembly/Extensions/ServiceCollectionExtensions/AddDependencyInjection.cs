@@ -62,6 +62,8 @@ namespace SwashbucklerDiary.WebAssembly.Extensions
             services.AddSingleton<IMacroGoalService, MacroGoalService>();
             services.AddSingleton<IMonthlyReviewService, MonthlyReviewService>();
             services.AddSingleton<IStateRecordService, StateRecordService>();
+            services.AddSingleton<ILessonService, LessonService>();
+            services.AddSingleton<IDailyEventService, DailyEventService>();
             services.AddSingleton<IReviewStatsService, ReviewStatsService>();
             services.AddSingleton<IReviewExportService, ReviewExportService>();
 

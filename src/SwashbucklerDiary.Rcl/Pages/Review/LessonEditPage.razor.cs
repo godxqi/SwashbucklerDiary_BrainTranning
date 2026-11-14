@@ -6,51 +6,24 @@ using SwashbucklerDiary.Shared;
 namespace SwashbucklerDiary.Rcl.Pages
 {
     /// <summary>
-    /// 课题记录的结构化表单。照状态管理表的写法：一节一格、选项用芯片、正文只当可读副本。
+    /// 课题记录的结构化表单。课题不再是日记：内容写进 <see cref="LessonModel"/>，
+    /// 类型写进关联表，人物与触因指向标签。
     /// <para>
-    /// 它仍然落成一篇普通 <see cref="DiaryModel"/>，挂「人物」和「课题」两个标签——
-    /// 所以库表、日历、搜索、导出、隐私模式全都自动继承，不新建表。
-    /// </para>
-    /// </summary>
-    /// <remarks>
     /// 「课题」这个说法借自阿德勒的「人生课题」（工作 / 交友 / 爱）与「课题分离」，
     /// 经岸见一郎《被讨厌的勇气》通俗化；「每个人都是来给你上课的」是新时代与佛教缘起的
-    /// 流行说法（Caroline Myss《神圣契约》, 2001；Brian Weiss《前世今生》, 1988），
-    /// 属于意义框架，不是心理学证据。本页只把它当自省工具：
-    /// 记录在某个人的某件事上学到了什么、有什么感悟；课题类型放在最后，
-    /// 作为「这段相遇让我完成了什么课题」的总结，而不是入场标签。
+    /// 流行说法，属于意义框架，不是心理学证据。本页只把它当自省工具。
+    /// </para>
     /// </remarks>
     public partial class LessonEditPage : ImportantComponentBase
     {
-        /// <summary>
-        /// 课题类型。和八大情绪一样走枚举：加一个值只改 <see cref="LessonType"/>、
-        /// 图标 json 和 i18n（key 就是枚举名），页面这里不用动。
-        /// </summary>
+        /// <summary>课题类型。加一个值只改枚举、图标 json 与 i18n。</summary>
         private static readonly LessonType[] lessonTypes = Enum.GetValues<LessonType>();
 
-        /// <summary>正文 4.1 ~ 4.8 的章节标题，顺序与表单一致：类型作为总结放在最后。</summary>
-        private static readonly string[] sectionTitleKeys =
-        [
-            "Person",
-            "What happened",
-            "My reaction",
-            "What it mirrors",
-            "Boundary",
-            "One line to keep",
-            "Next step",
-            "Lesson type",
-        ];
+        /// <summary>回访结果。顺序固定：做到 / 部分 / 没做到 / 不再相关。</summary>
+        private static readonly LessonFollowUpStatus[] followUpStatuses =
+            Enum.GetValues<LessonFollowUpStatus>();
 
-        /// <summary>四层反应的题干，顺序与 <see cref="LessonSections.Reactions"/> 一致。</summary>
-        private static readonly string[] reactionLabelKeys =
-        [
-            "Physical",
-            "Mental",
-            "Emotional",
-            "Spiritual",
-        ];
-
-        private Guid diaryId = Guid.Empty;
+        private Guid lessonId = Guid.Empty;
 
         private DateTime occurredTime = DateTime.Now;
 
@@ -58,10 +31,9 @@ namespace SwashbucklerDiary.Rcl.Pages
 
         private string personName = string.Empty;
 
-        private HashSet<LessonType> selectedTypes = [];
+        private Guid? triggerTagId;
 
-        /// <summary>正文里认得出来、但不在固定八类里的自定义类型。切换语言后别把它们弄丢。</summary>
-        private string lessonTypesExtra = string.Empty;
+        private HashSet<LessonType> selectedTypes = [];
 
         private string eventText = string.Empty;
 
@@ -81,11 +53,37 @@ namespace SwashbucklerDiary.Rcl.Pages
 
         private string nextStep = string.Empty;
 
+        private DateTime? followUpDueTime;
+
+        /// <summary>用户是否手动改过回访日期。没改过时，默认跟着发生日走。</summary>
+        private bool followUpDueEdited;
+
+        private LessonFollowUpStatus? followUpStatus;
+
+        private string followUpNote = string.Empty;
+
+        /// <summary>归档目标：归档区四栏 + 三个优点表 + 肯定库 + 宏观目标。</summary>
+        private static readonly ArchiveTarget[] archiveTargets = Enum.GetValues<ArchiveTarget>();
+
+        private ArchiveTarget archiveTarget = ArchiveTarget.SelfInsight;
+
+        private Guid? macroGoalId;
+
+        private bool archiveSaving;
+
         private List<TagModel> personTags = [];
+
+        private List<TriggerCount> triggers = [];
+
+        private List<MacroGoalModel> macroGoals = [];
 
         private bool showAddPerson;
 
+        private bool showAddTrigger;
+
         private bool showDatePicker;
+
+        private bool showFollowUpDatePicker;
 
         private bool dirty;
 
@@ -104,21 +102,57 @@ namespace SwashbucklerDiary.Rcl.Pages
                 }
 
                 occurredTime = value.ToDateTime(TimeOnly.FromTimeSpan(occurredTime.TimeOfDay));
+                if (!followUpDueEdited)
+                {
+                    followUpDueTime = occurredTime.Date.AddDays(14);
+                }
+
+                dirty = true;
+            }
+        }
+
+        private DateOnly SelectedFollowUpDate
+        {
+            get => DateOnly.FromDateTime(followUpDueTime ?? occurredTime.Date.AddDays(14));
+            set
+            {
+                if (value == default)
+                {
+                    return;
+                }
+
+                followUpDueTime = value.ToDateTime(TimeOnly.MinValue);
+                followUpDueEdited = true;
                 dirty = true;
             }
         }
 
         [Inject]
-        private IDiaryService DiaryService { get; set; } = default!;
+        private ILessonService LessonService { get; set; } = default!;
 
         [Inject]
         private ITagService TagService { get; set; } = default!;
 
         [Inject]
+        private ITriggerService TriggerService { get; set; } = default!;
+
+        [Inject]
         private IGlobalConfiguration GlobalConfiguration { get; set; } = default!;
 
+        [Inject]
+        private IArchiveService ArchiveService { get; set; } = default!;
+
+        [Inject]
+        private IVirtueService VirtueService { get; set; } = default!;
+
+        [Inject]
+        private IAffirmationService AffirmationService { get; set; } = default!;
+
+        [Inject]
+        private IMacroGoalService MacroGoalService { get; set; } = default!;
+
         [SupplyParameterFromQuery]
-        private Guid? DiaryId { get; set; }
+        private Guid? Id { get; set; }
 
         protected override void OnInitialized()
         {
@@ -130,7 +164,7 @@ namespace SwashbucklerDiary.Rcl.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            diaryId = DiaryId ?? Guid.Empty;
+            lessonId = Id ?? Guid.Empty;
 
             await LoadAsync();
 
@@ -150,8 +184,10 @@ namespace SwashbucklerDiary.Rcl.Pages
         {
             var tags = await TagService.QueryAsync();
             personTags = tags.Where(it => it.Kind == TagKind.Person).ToList();
+            triggers = await TriggerService.GetWithCountsAsync();
+            macroGoals = await MacroGoalService.GetActiveAsync();
 
-            if (diaryId == Guid.Empty)
+            if (lessonId == Guid.Empty)
             {
                 ResetFields();
                 dirty = false;
@@ -159,49 +195,36 @@ namespace SwashbucklerDiary.Rcl.Pages
                 return;
             }
 
-            var diary = await DiaryService.FindAsync(diaryId);
-            if (diary is null)
+            var view = await LessonService.GetAsync(lessonId);
+            if (view is null)
             {
                 //那条被删了：退回一张空白表，不让页面停在半空
-                diaryId = Guid.Empty;
+                lessonId = Guid.Empty;
                 ResetFields();
                 dirty = false;
                 await InvokeAsync(StateHasChanged);
                 return;
             }
 
-            var sections = LessonSections.Parse(diary.Content);
-            occurredTime = diary.CreateTime;
-            personName = sections.Person;
-            selectedTypes = ParseTypes(sections.LessonTypes);
-            eventText = sections.Event;
-            reactionBody = sections.Reactions.ElementAtOrDefault(0) ?? string.Empty;
-            reactionMind = sections.Reactions.ElementAtOrDefault(1) ?? string.Empty;
-            reactionEmotion = sections.Reactions.ElementAtOrDefault(2) ?? string.Empty;
-            reactionSpirit = sections.Reactions.ElementAtOrDefault(3) ?? string.Empty;
-            mirror = sections.Mirror;
-            boundary = sections.Boundary;
-            takeaway = sections.Takeaway;
-            nextStep = sections.NextStep;
-
-            var personTag = diary.Tags?.FirstOrDefault(it => it.Kind == TagKind.Person)
-                ?? diary.Tags?.FirstOrDefault(it => !string.IsNullOrEmpty(personName)
-                    && it.Name == personName
-                    && (it.Kind == TagKind.Normal || it.Kind == null))
-                ?? tags.FirstOrDefault(it => it.Kind == TagKind.Person && it.Name == personName);
-            personTagId = personTag?.Id;
-
-            //旧数据里人物可能只是一个普通标签；这里顺手升级成 Person，下次才会出现在人物芯片里。
-            if (personTag is not null && personTag.Kind != TagKind.Person)
-            {
-                personTag.Kind = TagKind.Person;
-                personTag.UpdateTime = DateTime.Now;
-                await TagService.UpdateAsync(personTag, it => new { it.Kind, it.UpdateTime });
-                if (!personTags.Any(it => it.Id == personTag.Id))
-                {
-                    personTags.Add(personTag);
-                }
-            }
+            var lesson = view.Lesson;
+            occurredTime = lesson.OccurredTime;
+            personTagId = view.PersonName is null ? null : lesson.PersonTagId;
+            personName = view.PersonName ?? string.Empty;
+            triggerTagId = view.TriggerName is null ? null : lesson.TriggerTagId;
+            selectedTypes = [.. view.Types];
+            eventText = lesson.Event ?? string.Empty;
+            reactionBody = lesson.ReactionBody ?? string.Empty;
+            reactionMind = lesson.ReactionMind ?? string.Empty;
+            reactionEmotion = lesson.ReactionEmotion ?? string.Empty;
+            reactionSpirit = lesson.ReactionSpirit ?? string.Empty;
+            mirror = lesson.Mirror ?? string.Empty;
+            boundary = lesson.Boundary ?? string.Empty;
+            takeaway = lesson.Takeaway ?? string.Empty;
+            nextStep = lesson.NextStep ?? string.Empty;
+            followUpDueTime = lesson.FollowUpDueTime ?? lesson.OccurredTime.Date.AddDays(14);
+            followUpDueEdited = lesson.FollowUpDueTime is not null;
+            followUpStatus = lesson.FollowUpStatus;
+            followUpNote = lesson.FollowUpNote ?? string.Empty;
 
             dirty = false;
             await InvokeAsync(StateHasChanged);
@@ -212,8 +235,8 @@ namespace SwashbucklerDiary.Rcl.Pages
             occurredTime = DateTime.Now;
             personTagId = null;
             personName = string.Empty;
+            triggerTagId = null;
             selectedTypes.Clear();
-            lessonTypesExtra = string.Empty;
             eventText = string.Empty;
             reactionBody = string.Empty;
             reactionMind = string.Empty;
@@ -223,36 +246,10 @@ namespace SwashbucklerDiary.Rcl.Pages
             boundary = string.Empty;
             takeaway = string.Empty;
             nextStep = string.Empty;
-        }
-
-        private HashSet<LessonType> ParseTypes(string? value)
-        {
-            HashSet<LessonType> result = [];
-            lessonTypesExtra = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return result;
-            }
-
-            List<string> unmatched = [];
-            var names = value.Split('、', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            foreach (string name in names)
-            {
-                // 0 不是合法的 LessonType，拿它当「没找到」的哨兵值
-                LessonType found = Array.Find(lessonTypes, it => I18n.T(it.ToString()) == name);
-                if (found != default)
-                {
-                    result.Add(found);
-                }
-                else
-                {
-                    unmatched.Add(name);
-                }
-            }
-
-            lessonTypesExtra = string.Join("、", unmatched);
-            return result;
+            followUpDueTime = occurredTime.Date.AddDays(14);
+            followUpDueEdited = false;
+            followUpStatus = null;
+            followUpNote = string.Empty;
         }
 
         private void MarkDirty()
@@ -276,6 +273,12 @@ namespace SwashbucklerDiary.Rcl.Pages
             dirty = true;
         }
 
+        private void SelectTrigger(Guid id)
+        {
+            triggerTagId = triggerTagId == id ? null : id;
+            dirty = true;
+        }
+
         private void ToggleType(LessonType type)
         {
             if (!selectedTypes.Remove(type))
@@ -286,51 +289,66 @@ namespace SwashbucklerDiary.Rcl.Pages
             dirty = true;
         }
 
+        private void ToggleFollowUpStatus(LessonFollowUpStatus status)
+        {
+            followUpStatus = followUpStatus == status ? null : status;
+            dirty = true;
+        }
+
         private async Task AddPersonAsync(string? name)
         {
             showAddPerson = false;
 
-            name = name?.Trim();
-            if (string.IsNullOrEmpty(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 return;
             }
 
-            var tags = await TagService.QueryAsync();
-            var tag = tags.FirstOrDefault(it => it.Name == name
-                && (it.Kind == TagKind.Person || it.Kind == TagKind.Normal || it.Kind == null));
-
+            var tag = await TagService.GetOrCreatePersonAsync(name);
             if (tag is null)
             {
-                tag = new TagModel
-                {
-                    Id = Guid.NewGuid(),
-                    Name = name,
-                    Kind = TagKind.Person,
-                };
-                if (!await TagService.AddAsync(tag))
-                {
-                    await AlertService.ErrorAsync(I18n.T("Add failed"));
-                    return;
-                }
-            }
-            else if (tag.Kind != TagKind.Person)
-            {
-                //同名的旧普通标签直接升级，不另造一个「张三」，否则历史会被劈成两半
-                tag.Kind = TagKind.Person;
-                tag.UpdateTime = DateTime.Now;
-                await TagService.UpdateAsync(tag, it => new { it.Kind, it.UpdateTime });
+                await AlertService.ErrorAsync(I18n.T("Add failed"));
+                return;
             }
 
-            personTags = tags.Where(it => it.Kind == TagKind.Person).ToList();
+            personTags = (await TagService.QueryAsync())
+                .Where(it => it.Kind == TagKind.Person)
+                .ToList();
             if (!personTags.Any(it => it.Id == tag.Id))
             {
                 personTags.Insert(0, tag);
             }
 
             personTagId = tag.Id;
-            personName = tag.Name ?? name;
+            personName = tag.Name ?? name.Trim();
             dirty = true;
+
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task AddTriggerAsync(string? name)
+        {
+            showAddTrigger = false;
+
+            string value = name?.Trim() ?? string.Empty;
+            if (value.Length == 0)
+            {
+                return;
+            }
+
+            if (!await TriggerService.AddAsync(value))
+            {
+                await AlertService.ErrorAsync(I18n.T("Add failed"));
+                return;
+            }
+
+            triggers = await TriggerService.GetWithCountsAsync();
+            var added = triggers.FirstOrDefault(it => it.Tag.Name == value);
+            if (added is not null)
+            {
+                triggerTagId = added.Tag.Id;
+                dirty = true;
+            }
 
             await InvokeAsync(StateHasChanged);
         }
@@ -342,7 +360,7 @@ namespace SwashbucklerDiary.Rcl.Pages
                 return;
             }
 
-            await SaveAsync(false, false);
+            await SaveLessonAsync(false, false);
         }
 
         /// <summary>返回键那条历史动作：先存再放行。</summary>
@@ -352,11 +370,29 @@ namespace SwashbucklerDiary.Rcl.Pages
             await SaveIfDirtyAsync();
         }
 
-        private async Task SaveAsync(bool navigateBack, bool showLoading = true)
+        private Task SaveAsync(bool navigateBack, bool showLoading = true)
+        {
+            return SaveLessonAsync(navigateBack, showLoading);
+        }
+
+        private async Task<Guid?> SaveLessonAsync(
+            bool navigateBack,
+            bool showLoading = true,
+            bool warnWhenEmpty = true)
         {
             if (saving)
             {
-                return;
+                return null;
+            }
+
+            if (IsEmpty())
+            {
+                if (warnWhenEmpty && navigateBack)
+                {
+                    await AlertService.WarningAsync(I18n.T("Nothing to save yet"));
+                }
+
+                return null;
             }
 
             saving = true;
@@ -367,110 +403,43 @@ namespace SwashbucklerDiary.Rcl.Pages
 
             try
             {
-                List<string> typeNames = [.. lessonTypes
-                    .Where(selectedTypes.Contains)
-                    .Select(it => I18n.T(it.ToString()))];
-                if (!string.IsNullOrWhiteSpace(lessonTypesExtra))
+                var lesson = new LessonModel
                 {
-                    typeNames.Add(lessonTypesExtra);
-                }
-
-                var sections = new LessonSections
-                {
-                    Person = personName,
-                    LessonTypes = string.Join("、", typeNames),
-                    Event = eventText,
-                    Reactions = [reactionBody, reactionMind, reactionEmotion, reactionSpirit],
-                    Mirror = mirror,
-                    Boundary = boundary,
-                    Takeaway = takeaway,
-                    NextStep = nextStep,
+                    Id = lessonId,
+                    OccurredTime = occurredTime,
+                    PersonTagId = personTagId,
+                    TriggerTagId = triggerTagId,
+                    Event = Normalize(eventText),
+                    ReactionBody = Normalize(reactionBody),
+                    ReactionMind = Normalize(reactionMind),
+                    ReactionEmotion = Normalize(reactionEmotion),
+                    ReactionSpirit = Normalize(reactionSpirit),
+                    Mirror = Normalize(mirror),
+                    Boundary = Normalize(boundary),
+                    Takeaway = Normalize(takeaway),
+                    NextStep = Normalize(nextStep),
+                    FollowUpDueTime = followUpDueTime,
+                    FollowUpStatus = followUpStatus,
+                    FollowUpNote = Normalize(followUpNote),
                 };
 
-                if (sections.IsEmpty && personTagId is null)
-                {
-                    if (navigateBack)
-                    {
-                        await AlertService.WarningAsync(I18n.T("Nothing to save yet"));
-                    }
-
-                    return;
-                }
-
-                DiaryModel diary;
-                if (diaryId == Guid.Empty)
-                {
-                    //自己生成 Id，不依赖 InsertAsync 回填（和日课建日记时同一个理由）
-                    diary = new DiaryModel
-                    {
-                        Id = Guid.NewGuid(),
-                        Tags = [],
-                        Resources = [],
-                    };
-                }
-                else
-                {
-                    var existing = await DiaryService.FindAsync(diaryId);
-                    if (existing is null)
-                    {
-                        diaryId = Guid.Empty;
-                        diary = new DiaryModel
-                        {
-                            Id = Guid.NewGuid(),
-                            Tags = [],
-                            Resources = [],
-                        };
-                    }
-                    else
-                    {
-                        diary = existing;
-                    }
-                }
-
-                diary.Title = string.IsNullOrWhiteSpace(personName)
-                    ? I18n.T("Lesson record")
-                    : $"{I18n.T("Lesson record")} · {personName}";
-                diary.Content = sections.Compose(
-                    sectionTitleKeys.Select(it => I18n.T(it)).ToArray(),
-                    reactionLabelKeys.Select(it => I18n.T(it)).ToArray());
-                diary.CreateTime = occurredTime;
-                diary.UpdateTime = DateTime.Now;
-
-                List<TagModel> diaryTags = [];
-                if (personTagId is Guid personId)
-                {
-                    var person = await TagService.FindAsync(personId);
-                    if (person is not null)
-                    {
-                        diaryTags.Add(person);
-                    }
-                }
-
-                var lessonTag = await GetOrCreateLessonTagAsync();
-                if (lessonTag is not null)
-                {
-                    diaryTags.Add(lessonTag);
-                }
-
-                diary.Tags = diaryTags;
-
-                bool isNew = diaryId == Guid.Empty;
-                bool success = isNew
-                    ? await DiaryService.AddAsync(diary)
-                    : await DiaryService.UpdateIncludesAsync(diary);
-                if (!success)
+                bool isNew = lessonId == Guid.Empty;
+                var savedId = await LessonService.SaveAsync(lesson, selectedTypes);
+                if (savedId is null)
                 {
                     await AlertService.ErrorAsync(I18n.T(isNew ? "Add failed" : "Change failed"));
-                    return;
+                    return null;
                 }
 
-                diaryId = diary.Id;
+                lessonId = savedId.Value;
                 dirty = false;
 
                 if (navigateBack)
                 {
                     await NavigateToBack();
                 }
+
+                return savedId;
             }
             finally
             {
@@ -482,30 +451,199 @@ namespace SwashbucklerDiary.Rcl.Pages
             }
         }
 
-        private async Task<TagModel?> GetOrCreateLessonTagAsync()
+        private bool IsEmpty()
         {
-            var tags = await TagService.QueryAsync();
-            var tag = tags.FirstOrDefault(it => it.Kind == TagKind.Lesson)
-                ?? tags.FirstOrDefault(it => it.Name == I18n.T("Lesson")
-                    && (it.Kind == TagKind.Normal || it.Kind == null));
-            if (tag is not null)
+            return personTagId is null
+                && triggerTagId is null
+                && selectedTypes.Count == 0
+                && string.IsNullOrWhiteSpace(eventText)
+                && string.IsNullOrWhiteSpace(reactionBody)
+                && string.IsNullOrWhiteSpace(reactionMind)
+                && string.IsNullOrWhiteSpace(reactionEmotion)
+                && string.IsNullOrWhiteSpace(reactionSpirit)
+                && string.IsNullOrWhiteSpace(mirror)
+                && string.IsNullOrWhiteSpace(boundary)
+                && string.IsNullOrWhiteSpace(takeaway)
+                && string.IsNullOrWhiteSpace(nextStep)
+                && followUpStatus is null
+                && string.IsNullOrWhiteSpace(followUpNote);
+        }
+
+        private static string? Normalize(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private string ArchiveTargetName(ArchiveTarget target) => target switch
+        {
+            ArchiveTarget.FuturePlan => ReviewSectionText.ArchiveKindText(I18n, ArchiveKind.FuturePlan),
+            ArchiveTarget.DailyThought => ReviewSectionText.ArchiveKindText(I18n, ArchiveKind.DailyThought),
+            ArchiveTarget.MicroFailure => ReviewSectionText.ArchiveKindText(I18n, ArchiveKind.MicroFailure),
+            ArchiveTarget.SelfInsight => ReviewSectionText.ArchiveKindText(I18n, ArchiveKind.SelfInsight),
+            ArchiveTarget.Positive => I18n.T("Positive list"),
+            ArchiveTarget.Gratitude => I18n.T("Gratitude list"),
+            ArchiveTarget.Achievement => I18n.T("Achievement list"),
+            ArchiveTarget.Affirmation => I18n.T("Affirmation library"),
+            _ => I18n.T("Macro goal"),
+        };
+
+        /// <summary>
+        /// 把「带走一句」收进选中的那一栏。归档立即落库；还没存过课题时先保存一次，
+        /// 这样归档行能记下来自哪篇课题。
+        /// <para>
+        /// 重复的语义按目标分开：7.4 的重复是「又发生了一次」，要让 ArchiveService 累计次数；
+        /// 其余八栏同一条只该有一份，已存在就提示。
+        /// </para>
+        /// </summary>
+        private async Task ArchiveTakeawayAsync()
+        {
+            string value = takeaway.Trim();
+            if (value.Length == 0 || archiveSaving)
             {
-                return tag;
+                return;
             }
 
-            tag = new TagModel
+            if (lessonId == Guid.Empty)
             {
-                Id = Guid.NewGuid(),
-                Name = I18n.T("Lesson"),
-                Kind = TagKind.Lesson,
-            };
-            if (!await TagService.AddAsync(tag))
-            {
-                await AlertService.ErrorAsync(I18n.T("Add failed"));
-                return null;
+                var savedId = await SaveLessonAsync(false, false, true);
+                if (savedId is null)
+                {
+                    return;
+                }
             }
 
-            return tag;
+            archiveSaving = true;
+            try
+            {
+                bool success;
+                int? repeatCount = null;
+
+                switch (archiveTarget)
+                {
+                    case ArchiveTarget.SelfInsight:
+                    case ArchiveTarget.FuturePlan:
+                    case ArchiveTarget.DailyThought:
+                    case ArchiveTarget.MicroFailure:
+                        ArchiveKind archiveKind = archiveTarget switch
+                        {
+                            ArchiveTarget.FuturePlan => ArchiveKind.FuturePlan,
+                            ArchiveTarget.DailyThought => ArchiveKind.DailyThought,
+                            ArchiveTarget.MicroFailure => ArchiveKind.MicroFailure,
+                            _ => ArchiveKind.SelfInsight,
+                        };
+
+                        var archived = (await ArchiveService.QueryAsync(archiveKind))
+                            .FirstOrDefault(it => IsSame(it.Content, value));
+                        if (archived is not null && archiveKind != ArchiveKind.MicroFailure)
+                        {
+                            await AlertService.InfoAsync(I18n.T("Already archived"));
+                            return;
+                        }
+
+                        success = await ArchiveService.ArchiveAsync(
+                            archiveKind,
+                            ArchiveSource.Manual,
+                            value,
+                            sourceLessonId: lessonId);
+                        if (success && archiveKind == ArchiveKind.MicroFailure)
+                        {
+                            repeatCount = (archived?.OccurrenceCount ?? 0) + 1;
+                        }
+                        break;
+
+                    case ArchiveTarget.Positive:
+                    case ArchiveTarget.Gratitude:
+                    case ArchiveTarget.Achievement:
+                        VirtueKind virtueKind = archiveTarget switch
+                        {
+                            ArchiveTarget.Gratitude => VirtueKind.Gratitude,
+                            ArchiveTarget.Achievement => VirtueKind.Achievement,
+                            _ => VirtueKind.Positive,
+                        };
+
+                        if ((await VirtueService.QueryAsync(virtueKind)).Any(it => IsSame(it.Content, value)))
+                        {
+                            await AlertService.InfoAsync(I18n.T("Already archived"));
+                            return;
+                        }
+
+                        success = await VirtueService.AddAsync(
+                            virtueKind,
+                            value,
+                            occurredTime,
+                            sourceLessonId: lessonId);
+                        break;
+
+                    case ArchiveTarget.Affirmation:
+                        if ((await AffirmationService.QueryAsync()).Any(it => IsSame(it.Content, value)))
+                        {
+                            await AlertService.InfoAsync(I18n.T("Already archived"));
+                            return;
+                        }
+
+                        success = await AffirmationService.AddAsync(new SelfAffirmationModel
+                        {
+                            Content = value,
+                            SourceLessonId = lessonId,
+                        });
+                        break;
+
+                    default:
+                        var goal = macroGoals.FirstOrDefault(it => it.Id == macroGoalId);
+                        if (goal is null)
+                        {
+                            return;
+                        }
+
+                        string note = goal.Description?.Trim() ?? string.Empty;
+                        if (IsSameLine(note, value))
+                        {
+                            await AlertService.InfoAsync(I18n.T("Already archived"));
+                            return;
+                        }
+
+                        goal.Description = note.Length == 0 ? value : $"{note}\n{value}";
+                        success = await MacroGoalService.SaveAsync(goal);
+                        break;
+                }
+
+                if (!success)
+                {
+                    await AlertService.ErrorAsync(I18n.T("Add failed"));
+                    return;
+                }
+
+                string targetName = ArchiveTargetName(archiveTarget);
+                await AlertService.SuccessAsync(repeatCount is int count
+                    ? I18n.T("Archived to {0} (time {1})", targetName, count)
+                    : I18n.T("Archived to {0}", targetName));
+            }
+            finally
+            {
+                archiveSaving = false;
+            }
+        }
+
+        private static bool IsSame(string? content, string value)
+            => string.Equals(content?.Trim(), value, StringComparison.Ordinal);
+
+        private static bool IsSameLine(string note, string value)
+            => note.Split('\n').Any(it => string.Equals(it.Trim(), value, StringComparison.Ordinal));
+
+        /// <summary>
+        /// 「带走一句」能归档到的九栏：归档区 7.1~7.4、三个优点表、自我肯定库、宏观目标。
+        /// </summary>
+        private enum ArchiveTarget
+        {
+            SelfInsight,
+            FuturePlan,
+            DailyThought,
+            MicroFailure,
+            Positive,
+            Gratitude,
+            Achievement,
+            Affirmation,
+            MacroGoal,
         }
     }
 
@@ -514,6 +652,9 @@ namespace SwashbucklerDiary.Rcl.Pages
     {
         public const string PersonDescription =
             "Who this is about. Pick someone, or add a new person.";
+
+        public const string TriggerDescription =
+            "What this reminded you of. Reuse the trigger tags from the state record; the same trigger counts on both sides.";
 
         public const string TypeDescription =
             "Write the experience first, then come back: which kind of lesson did this relationship move forward? Pick as many as apply.";
@@ -535,5 +676,8 @@ namespace SwashbucklerDiary.Rcl.Pages
 
         public const string NextStepDescription =
             "One concrete action, not a resolution.";
+
+        public const string FollowUpDescription =
+            "Come back when it is due: did the next step happen, and did the relationship change?";
     }
 }

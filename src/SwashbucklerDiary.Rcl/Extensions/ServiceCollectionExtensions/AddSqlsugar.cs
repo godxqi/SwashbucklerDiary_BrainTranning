@@ -158,6 +158,44 @@ namespace SwashbucklerDiary.Rcl.Extensions
                             it.IndexGroupNameList = ["idx_state_trigger"];
                         });
 
+                        column.IfTable<LessonModel>()
+                        .UpdateProperty(it => it.OccurredTime, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_lesson_occurred"];
+                        })
+                        .UpdateProperty(it => it.PersonTagId, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_lesson_person"];
+                        })
+                        .UpdateProperty(it => it.TriggerTagId, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_lesson_trigger"];
+                        })
+                        .UpdateProperty(it => it.FollowUpDueTime, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_lesson_followup"];
+                        });
+
+                        column.IfTable<LessonTypeLinkModel>()
+                        .UpdateProperty(it => it.LessonId, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_lesson_type_lesson"];
+                        })
+                        .UpdateProperty(it => it.Type, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_lesson_type_type"];
+                        });
+
+                        column.IfTable<DailyEventModel>()
+                        .UpdateProperty(it => it.DailyReviewId, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_daily_event_review"];
+                        })
+                        .UpdateProperty(it => it.PersonTagId, it =>
+                        {
+                            it.IndexGroupNameList = ["idx_daily_event_person"];
+                        });
+
                         /***高版C#写法***/
                         //支持string?和string  
                         if (column.IsPrimarykey == false && new NullabilityInfoContext()
@@ -321,6 +359,9 @@ namespace SwashbucklerDiary.Rcl.Extensions
                     typeof(ArchiveItemModel),
                     typeof(MacroGoalModel),
                     typeof(StateRecordModel),
+                    typeof(LessonModel),
+                    typeof(LessonTypeLinkModel),
+                    typeof(DailyEventModel),
                 };
 
                 foreach (var config in dataConfigs)
