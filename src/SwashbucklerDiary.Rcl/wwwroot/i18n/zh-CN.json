@@ -909,5 +909,19 @@
   "NotDone": "没做到",
   "Irrelevant": "不再相关",
   "Turn this repeated lesson into a limiting belief": "把反复出现的课题类型起成一条限制性观念",
-  "Turn this repeated person pattern into a limiting belief": "把反复出现的人物模式起成一条限制性观念"
+  "Turn this repeated person pattern into a limiting belief": "把反复出现的人物模式起成一条限制性观念",
+  "Sync": "同步",
+  "Sync now": "立即同步",
+  "Sync on startup": "启动时自动同步",
+  "Sync images, audio and video": "同步图片、音频和视频",
+  "Not synced yet": "尚未同步",
+  "Last synced": "上次同步",
+  "Sync is disabled in privacy mode": "隐私模式下不可同步",
+  "No changes to sync": "没有需要同步的改动",
+  "Sync failed": "同步失败",
+  "Uploaded": "上传",
+  "Downloaded": "下载",
+  "Deleted": "删除",
+  "Conflicts": "冲突",
+  "Diagnose": "诊断"
 }

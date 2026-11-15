@@ -900,5 +900,19 @@
   "NotDone": "NotDone",
   "Irrelevant": "Irrelevant",
   "Turn this repeated lesson into a limiting belief": "Turn this repeated lesson into a limiting belief",
-  "Turn this repeated person pattern into a limiting belief": "Turn this repeated person pattern into a limiting belief"
+  "Turn this repeated person pattern into a limiting belief": "Turn this repeated person pattern into a limiting belief",
+  "Sync": "Sync",
+  "Sync now": "Sync now",
+  "Sync on startup": "Sync on startup",
+  "Sync images, audio and video": "Sync images, audio and video",
+  "Not synced yet": "Not synced yet",
+  "Last synced": "Last synced",
+  "Sync is disabled in privacy mode": "Sync is disabled in privacy mode",
+  "No changes to sync": "No changes to sync",
+  "Sync failed": "Sync failed",
+  "Uploaded": "Uploaded",
+  "Downloaded": "Downloaded",
+  "Deleted": "Deleted",
+  "Conflicts": "Conflicts",
+  "Diagnose": "Diagnose"
 }

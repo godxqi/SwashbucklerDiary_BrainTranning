@@ -119,6 +119,49 @@ namespace SwashbucklerDiary.Rcl.Services
             await MergeAsync(_dailyEventRepository, model.DailyEvents).ConfigureAwait(false);
         }
 
+        public async Task ApplyMergedAsync(ReviewExportModel local, ReviewExportModel merged)
+        {
+            ArgumentNullException.ThrowIfNull(local);
+            ArgumentNullException.ThrowIfNull(merged);
+
+            await MirrorAsync(_dailyRepository, local.DailyReviews, merged.DailyReviews).ConfigureAwait(false);
+            await MirrorAsync(_weeklyRepository, local.WeeklyReviews, merged.WeeklyReviews).ConfigureAwait(false);
+            await MirrorAsync(_weeklyGoalRepository, local.WeeklyGoals, merged.WeeklyGoals).ConfigureAwait(false);
+            await MirrorAsync(_stumblingBlockRepository, local.StumblingBlocks, merged.StumblingBlocks).ConfigureAwait(false);
+            await MirrorAsync(_monthlyRepository, local.MonthlyReviews, merged.MonthlyReviews).ConfigureAwait(false);
+            await MirrorAsync(_limitingBeliefRepository, local.LimitingBeliefs, merged.LimitingBeliefs).ConfigureAwait(false);
+            await MirrorAsync(_enemyRepository, local.Enemies, merged.Enemies).ConfigureAwait(false);
+            await MirrorAsync(_virtueEntryRepository, local.VirtueEntries, merged.VirtueEntries).ConfigureAwait(false);
+            await MirrorAsync(_affirmationRepository, local.Affirmations, merged.Affirmations).ConfigureAwait(false);
+            await MirrorAsync(_archiveItemRepository, local.ArchiveItems, merged.ArchiveItems).ConfigureAwait(false);
+            await MirrorAsync(_macroGoalRepository, local.MacroGoals, merged.MacroGoals).ConfigureAwait(false);
+            await MirrorAsync(_stateRecordRepository, local.StateRecords, merged.StateRecords).ConfigureAwait(false);
+            await MirrorAsync(_lessonRepository, local.Lessons, merged.Lessons).ConfigureAwait(false);
+            await MirrorAsync(_lessonTypeRepository, local.LessonTypeLinks, merged.LessonTypeLinks).ConfigureAwait(false);
+            await MirrorAsync(_dailyEventRepository, local.DailyEvents, merged.DailyEvents).ConfigureAwait(false);
+        }
+
+        /// <summary>先删差集，再 upsert 并集。</summary>
+        private static async Task MirrorAsync<T>(
+            IReviewRepository<T> repository,
+            List<T> local,
+            List<T> merged)
+            where T : BaseModel, new()
+        {
+            var mergedIds = merged.Select(it => it.Id).ToHashSet();
+            var toDelete = local
+                .Where(it => !mergedIds.Contains(it.Id))
+                .Select(it => it.Id)
+                .ToList();
+
+            if (toDelete.Count > 0)
+            {
+                await repository.DeleteAsync(it => toDelete.Contains(it.Id)).ConfigureAwait(false);
+            }
+
+            await MergeAsync(repository, merged).ConfigureAwait(false);
+        }
+
         private static async Task<List<T>> LoadAsync<T>(IReviewRepository<T> repository)
             where T : class, new()
         {
@@ -156,7 +199,12 @@ namespace SwashbucklerDiary.Rcl.Services
 
             foreach (var entity in toUpdate)
             {
-                entity.UpdateTime = DateTime.Now;
+                // 同步应用远端时必须保留对象自己的 UpdateTime，否则行级 LWW 立刻失效。
+                if (!SyncContext.SuppressUpdateTimeRefresh)
+                {
+                    entity.UpdateTime = DateTime.Now;
+                }
+
                 await repository.UpdateAsync(entity).ConfigureAwait(false);
             }
         }

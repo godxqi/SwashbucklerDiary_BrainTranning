@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SqlSugar;
 using SwashbucklerDiary.Rcl.Essentials;
+using SwashbucklerDiary.Rcl.Services;
 using SwashbucklerDiary.Shared;
 using System.Diagnostics;
 using System.Reflection;
@@ -316,6 +317,49 @@ namespace SwashbucklerDiary.Rcl.Extensions
                             Debug.WriteLine(UtilMethods.GetSqlString(DbType.Sqlite, sql, pars));//输出sql
                         };
 #endif
+                        // UpdateTime 兜底。业务代码里 30 多处手写 UpdateTime，漏一处就会漏同步，
+                        // 所以统一在这里刷新。两个例外：
+                        // 1. 同步导入时（SyncContext），必须保留对象自带的 UpdateTime，否则 LWW 失效；
+                        // 2. Insert 时只在默认值的情况下补，避免覆盖导入对象的时间。
+                        // 注意：Updateable(entity).UpdateColumns(columns) 只写指定列，
+                        // 若 columns 不含 UpdateTime，这里设置的值不会落库。这类调用点需要显式带上 UpdateTime。
+                        db.GetConnection(config.ConfigId).Aop.DataExecuting = (oldValue, entityInfo) =>
+                        {
+                            if (entityInfo.EntityValue is not BaseModel model)
+                            {
+                                return;
+                            }
+
+                            if (entityInfo.PropertyName != nameof(BaseModel.UpdateTime))
+                            {
+                                return;
+                            }
+
+                            // SqlSugarCoreNoDrive.Aot 把 DataOperationType 枚举裁掉了（编译期找不到类型），
+                            // 只能按运行时字符串判断。实测真机返回的是 "UpdateByObject" 这类带后缀的值，
+                            // 不是文档里的 "Update"，所以用前缀匹配，同时兼容数值形式（Add=0 / Update=1）。
+                            // 先判属性名再判操作类型，避免每次写入为每个属性付一次字符串比较。
+                            string operation = entityInfo.OperationType.ToString();
+                            bool isAdd = operation == "0"
+                                || operation.StartsWith("Add", StringComparison.Ordinal);
+                            bool isUpdate = operation == "1"
+                                || operation.StartsWith("Update", StringComparison.Ordinal);
+
+                            SyncDiagnostics.LastOperationType = operation;
+                            SyncDiagnostics.LastPropertyName = entityInfo.PropertyName;
+
+                            if (isAdd)
+                            {
+                                if (model.UpdateTime == default)
+                                {
+                                    entityInfo.SetValue(DateTime.Now);
+                                }
+                            }
+                            else if (isUpdate && !SyncContext.SuppressUpdateTimeRefresh)
+                            {
+                                entityInfo.SetValue(DateTime.Now);
+                            }
+                        };
                         if (OperatingSystem.IsBrowser())
                         {
                             db.GetConnection(config.ConfigId).Aop.OnLogExecuted = async (sql, pars) =>
@@ -362,6 +406,8 @@ namespace SwashbucklerDiary.Rcl.Extensions
                     typeof(LessonModel),
                     typeof(LessonTypeLinkModel),
                     typeof(DailyEventModel),
+                    // 同步墓碑
+                    typeof(SyncGraveModel),
                 };
 
                 foreach (var config in dataConfigs)

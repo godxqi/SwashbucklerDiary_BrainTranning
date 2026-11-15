@@ -29,6 +29,15 @@
             <DynamicComponent Type="WebDAVBackupsPageType" />
         </MContainer>
     </SwiperTabItem>
+    @if (SyncPageType is not null)
+    {
+        <SwiperTabItem>
+            <MContainer Class="my-container"
+                        Fluid="true">
+                <DynamicComponent Type="SyncPageType" />
+            </MContainer>
+        </SwiperTabItem>
+    }
 </SwiperTabItems>
 
 

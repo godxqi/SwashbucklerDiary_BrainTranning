@@ -45,6 +45,7 @@ namespace SwashbucklerDiary.Gtk.Extensions
             services.AddSingleton<IResourceRepository, ResourceRepository>();
             // 复盘系统的 12 张表彼此同构，一个开放泛型注册就够
             services.AddSingleton(typeof(IReviewRepository<>), typeof(ReviewRepository<>));
+            services.AddSingleton<ISyncGraveRepository, SyncGraveRepository>();
 
             services.AddSingleton<ITagService, TagService>();
             services.AddSingleton<IDiaryService, DiaryService>();
@@ -68,6 +69,18 @@ namespace SwashbucklerDiary.Gtk.Extensions
             services.AddSingleton<IDailyEventService, DailyEventService>();
             services.AddSingleton<IReviewStatsService, ReviewStatsService>();
             services.AddSingleton<IReviewExportService, ReviewExportService>();
+            // 同步
+            services.AddSingleton<ISyncGraveService, SyncGraveService>();
+            services.AddSingleton<ISyncStateStore, SyncStateStore>();
+            services.AddSingleton<ISyncDiagnosticsService, SyncDiagnosticsService>();
+            services.AddSingleton<ISyncObjectCodec, SyncObjectCodec>();
+            services.AddSingleton<ISyncSnapshotService, SyncSnapshotService>();
+            services.AddSingleton<ISyncManifestStore, SyncManifestStore>();
+            services.AddSingleton<ISyncDiaryHandler, SyncDiaryHandler>();
+            services.AddSingleton<ISyncAssetHandler, SyncAssetHandler>();
+            services.AddSingleton<ISyncReviewHandler, SyncReviewHandler>();
+            services.AddSingleton<ISyncExecutor, SyncExecutor>();
+            services.AddSingleton<ISyncService, SyncService>();
 
             services.AddSingleton<IAppLifecycle>(sp => Essentials.AppLifecycle.Default);
             services.AddSingleton<IThemeService, ThemeService>();
@@ -77,6 +90,7 @@ namespace SwashbucklerDiary.Gtk.Extensions
             services.AddScoped<IScreenshot, Screenshot>();
             services.AddSingleton<IVersionUpdataManager, Services.VersionUpdataManager>();
             services.AddSingleton<IWebDAV, WebDAV>();
+            services.AddSingleton<ISyncStorage, WebDavSyncStorage>();
             services.AddSingleton<ILANSenderService, LANSenderService>();
             services.AddSingleton<ILANReceiverService, LANReceiverService>();
             services.AddSingleton<IProxyService, ProxyService>();

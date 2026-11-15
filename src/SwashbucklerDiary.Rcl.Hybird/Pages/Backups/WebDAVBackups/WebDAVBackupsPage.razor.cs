@@ -39,7 +39,7 @@ namespace SwashbucklerDiary.Rcl.Pages
             var configJson = SettingService.Get(s => s.WebDavConfig);
             if (!string.IsNullOrEmpty(configJson))
             {
-                configModel = JsonSerializer.Deserialize<WebDavConfigForm>(configJson) ?? new();
+                configModel = JsonSerializer.Deserialize(configJson, WebDavJsonContext.Default.WebDavConfigForm) ?? new();
             }
 
             includeDiaryResources = SettingService.Get(s => s.WebDAVCopyResources);
@@ -67,7 +67,7 @@ namespace SwashbucklerDiary.Rcl.Pages
                 configModel = webDavConfig.DeepClone();
                 showConfig = false;
                 await AlertService.SuccessAsync(I18n.T("Configuration successful"));
-                var configJson = JsonSerializer.Serialize(configModel);
+                var configJson = JsonSerializer.Serialize(configModel, WebDavJsonContext.Default.WebDavConfigForm);
                 await SettingService.SetAsync(s => s.WebDavConfig, configJson);
             }
         }

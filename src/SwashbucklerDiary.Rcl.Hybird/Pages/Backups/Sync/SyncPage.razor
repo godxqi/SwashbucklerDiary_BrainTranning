@@ -1,0 +1,133 @@
+@namespace SwashbucklerDiary.Rcl.Pages
+@inherits ImportantComponentBase
+
+@if (privacyMode)
+{
+    <MCard Class="mb-5"
+           Elevation="0"
+           Rounded="@("lg")">
+        <MListItem>
+            <MListItemIcon>
+                <MIcon Color="warning">
+                    mdi:mdi-shield-lock-outline
+                </MIcon>
+            </MListItemIcon>
+            <MListItemContent>
+                <MListItemTitle>
+                    <wc-auto-scroll-text>@I18n.T("Sync is disabled in privacy mode")</wc-auto-scroll-text>
+                </MListItemTitle>
+            </MListItemContent>
+        </MListItem>
+    </MCard>
+}
+else
+{
+    <MCard Class="mb-5"
+           Elevation="0"
+           Rounded="@("lg")">
+        <MList Class="py-0">
+            <MListItem OnClick="RunSync">
+                <MListItemIcon>
+                    <MIcon>
+                        mdi:mdi-sync
+                    </MIcon>
+                </MListItemIcon>
+                <MListItemContent>
+                    <MListItemTitle>
+                        <wc-auto-scroll-text>@I18n.T("Sync now")</wc-auto-scroll-text>
+                    </MListItemTitle>
+                    <MListItemSubtitle Class="text-caption-xs-only">
+                        <wc-auto-scroll-text>@lastSyncText</wc-auto-scroll-text>
+                    </MListItemSubtitle>
+                </MListItemContent>
+                <MListItemAction>
+                    <MIcon>chevron_right</MIcon>
+                </MListItemAction>
+            </MListItem>
+
+            <MDivider Class="mx-5"></MDivider>
+
+            <MListItem OnClick="RunProbe">
+                <MListItemIcon>
+                    <MIcon>
+                        mdi:mdi-stethoscope
+                    </MIcon>
+                </MListItemIcon>
+                <MListItemContent>
+                    <MListItemTitle>
+                        <wc-auto-scroll-text>@I18n.T("Diagnose")</wc-auto-scroll-text>
+                    </MListItemTitle>
+                </MListItemContent>
+                <MListItemAction>
+                    <MIcon>chevron_right</MIcon>
+                </MListItemAction>
+            </MListItem>
+        </MList>
+    </MCard>
+
+    <MCard Elevation="0"
+           Rounded="@("lg")">
+        <MList Class="py-0">
+            <MListItem>
+                <MListItemContent>
+                    <MListItemTitle>
+                        <wc-auto-scroll-text>@I18n.T("Include media files")</wc-auto-scroll-text>
+                    </MListItemTitle>
+                    <MListItemSubtitle Class="text-caption-xs-only">
+                        <wc-auto-scroll-text>@I18n.T("Sync images, audio and video")</wc-auto-scroll-text>
+                    </MListItemSubtitle>
+                </MListItemContent>
+                <MListItemAction>
+                    <SettingSwitch @bind-Value="includeAssets"
+                                   SettingKey="@SyncKeys.IncludeAssetsKey">
+                    </SettingSwitch>
+                </MListItemAction>
+            </MListItem>
+
+            <MDivider Class="mx-5"></MDivider>
+
+            <MListItem>
+                <MListItemContent>
+                    <MListItemTitle>
+                        <wc-auto-scroll-text>@I18n.T("Sync on startup")</wc-auto-scroll-text>
+                    </MListItemTitle>
+                </MListItemContent>
+                <MListItemAction>
+                    <SettingSwitch @bind-Value="autoOnStart"
+                                   SettingKey="@SyncKeys.AutoOnStartKey">
+                    </SettingSwitch>
+                </MListItemAction>
+            </MListItem>
+        </MList>
+    </MCard>
+
+    <CustomMDialog @bind-MyValue="showProbe"
+                   ContentClass="rounded-lg"
+                   MaxWidth="480"
+                   Scrollable="true">
+        <MCard>
+            <MCardTitle Class="font-weight-bold flex-nowrap">
+                <wc-auto-scroll-text>@I18n.T("Diagnose")</wc-auto-scroll-text>
+                <MSpacer></MSpacer>
+                <MButton Icon="true"
+                         OnClick="@(()=>showProbe=false)">
+                    <MIcon>close</MIcon>
+                </MButton>
+            </MCardTitle>
+            <MCardText Class="pb-0">
+                @foreach (var step in probeSteps)
+                {
+                    <div class="d-flex align-start py-1">
+                        <MIcon Color="@(step.Passed ? "success" : "error")" Class="me-2">
+                            @(step.Passed ? "check_circle" : "error")
+                        </MIcon>
+                        <div>
+                            <div class="text-body-2">@step.Name</div>
+                            <div class="text-caption">@step.Detail</div>
+                        </div>
+                    </div>
+                }
+            </MCardText>
+        </MCard>
+    </CustomMDialog>
+}

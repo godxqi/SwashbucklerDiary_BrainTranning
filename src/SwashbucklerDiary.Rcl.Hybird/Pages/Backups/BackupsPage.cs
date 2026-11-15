@@ -6,5 +6,7 @@ namespace SwashbucklerDiary.Rcl.Pages
     public class BackupsPage : BackupsPageBase
     {
         protected override Type WebDAVBackupsPageType => typeof(WebDAVBackupsPage);
+
+        protected override Type? SyncPageType => typeof(SyncPage);
     }
 }

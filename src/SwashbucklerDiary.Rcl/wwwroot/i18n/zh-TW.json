@@ -586,5 +586,19 @@
   "NotDone": "沒做到",
   "Irrelevant": "不再相關",
   "Turn this repeated lesson into a limiting belief": "把反覆出現的課題類型起成一條限制性觀念",
-  "Turn this repeated person pattern into a limiting belief": "把反覆出現的人物模式起成一條限制性觀念"
+  "Turn this repeated person pattern into a limiting belief": "把反覆出現的人物模式起成一條限制性觀念",
+  "Sync": "同步",
+  "Sync now": "立即同步",
+  "Sync on startup": "啟動時自動同步",
+  "Sync images, audio and video": "同步圖片、音訊和影片",
+  "Not synced yet": "尚未同步",
+  "Last synced": "上次同步",
+  "Sync is disabled in privacy mode": "隱私模式下不可同步",
+  "No changes to sync": "沒有需要同步的改動",
+  "Sync failed": "同步失敗",
+  "Uploaded": "上傳",
+  "Downloaded": "下載",
+  "Deleted": "刪除",
+  "Conflicts": "衝突",
+  "Diagnose": "診斷"
 }

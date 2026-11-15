@@ -26,5 +26,15 @@ namespace SwashbucklerDiary.Rcl.Services
         /// </para>
         /// </summary>
         Task ImportAsync(ReviewExportModel? model);
+
+        /// <summary>
+        /// 同步专用：把 <paramref name="merged"/> 镜像到本地库。
+        /// <para>
+        /// 与 <see cref="ImportAsync"/> 的区别是它会删除「本地有、合并结果没有」的行——
+        /// 复盘行删除要传播，只 upsert 不够。调用方必须用
+        /// <c>SyncContext.BeginSuppressGraveRecording()</c> 包住，避免镜像删除又写一轮墓碑。
+        /// </para>
+        /// </summary>
+        Task ApplyMergedAsync(ReviewExportModel local, ReviewExportModel merged);
     }
 }

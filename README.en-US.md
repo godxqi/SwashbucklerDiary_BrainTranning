@@ -51,6 +51,7 @@ See details [./download-guide.md](./download-guide.md)
 * Export multiple format files
 * Support text and image sharing
 * Support webdav backup
+* WebDAV multi-device sync (diaries, reviews, locations; media optional)
 * Synchronous transmission under the same local area network
 
 ## 🧩 Screenshot

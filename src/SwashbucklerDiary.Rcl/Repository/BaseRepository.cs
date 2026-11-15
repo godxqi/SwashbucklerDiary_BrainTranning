@@ -29,7 +29,7 @@ namespace SwashbucklerDiary.Rcl.Repository
             return Context.Queryable<T>().CountAsync();
         }
 
-        public Task<bool> DeleteAsync()
+        public virtual Task<bool> DeleteAsync()
         {
             return Context.Deleteable<T>().ExecuteCommandHasChangeAsync();
         }
